@@ -10,6 +10,7 @@ description: >
   symbol, test, build change, or the whole solution at any time.
 compatibility: Codex, Cursor, Gemini CLI, GitHub Copilot, Claude Code, and OpenCode; requires Git plus filesystem and shell access for Shadow worktrees.
 metadata:
+  version: "0.2.0"
   short-description: Shadow-implement first, then pair-program the verified solution step by step
   opencode/slash: "true"
 ---
