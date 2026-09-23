@@ -2,6 +2,23 @@
 
 The slash commands are semantic intents. They do not require a shell extension.
 
+## Host invocation normalization
+
+Use the host's native skill invocation and normalize the trailing arguments into this
+document's `/pair ...` protocol:
+
+```text
+Codex:                         $pair-programming <command> ...
+Cursor / Claude Code / OpenCode: /pair-programming <command> ...
+Gemini CLI:                     activate pair-programming, then provide /pair <command> ...
+GitHub Copilot:                 use /pair-programming skill to run /pair <command> ...
+Internal semantic form:         /pair <command> ...
+```
+
+Example: `$pair-programming review step 2` and
+`/pair-programming review step 2` both mean `/pair review step 2`.
+
+
 ## `/pair plan <goal-or-design>`
 
 Input may be:

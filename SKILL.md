@@ -8,8 +8,10 @@ description: >
   the verified solution into teachable implementation steps and guides the user through
   rebuilding it on the real branch. The user can inspect or transplant any step, file,
   symbol, test, build change, or the whole solution at any time.
+compatibility: Codex, Cursor, Gemini CLI, GitHub Copilot, Claude Code, and OpenCode; requires Git plus filesystem and shell access for Shadow worktrees.
 metadata:
   short-description: Shadow-implement first, then pair-program the verified solution step by step
+  opencode/slash: "true"
 ---
 
 # Pair Programming — Shadow Implementation + Guided Reconstruction
@@ -86,23 +88,67 @@ After the Shadow solution is verified, create a third artifact:
 
 ## Invocation
 
-Trigger this skill when the user asks for pair programming, guided coding, learning while
-implementing, "don't let AI write everything", shadow/reference implementation, or uses
-commands such as:
+This skill is portable across hosts. The workflow commands below are **semantic intents**.
+Normalize host-native invocation into the same internal `/pair <command>` protocol.
 
-- `/pair plan <goal>`
-- `/pair next`
-- `/pair review [scope]`
-- `/pair hint [scope] [level]`
-- `/pair show <scope>`
-- `/pair take <scope>`
-- `/pair status`
-- `/pair challenge [scope]`
-- `/pair rebase-plan`
-- `/pair explain <scope>`
+Supported explicit invocation forms:
 
-Also accept natural-language equivalents. Slash commands are a conversation protocol, not
-a requirement for an actual shell command implementation.
+```text
+# Codex
+$pair-programming plan <goal-or-design>
+$pair-programming next
+$pair-programming review
+$pair-programming hint
+$pair-programming take tests
+$pair-programming status
+
+# Cursor / Claude Code / OpenCode
+/pair-programming plan <goal-or-design>
+/pair-programming next
+/pair-programming review
+/pair-programming hint
+/pair-programming take tests
+/pair-programming status
+
+# Gemini CLI
+Use the pair-programming skill, then provide the semantic /pair command.
+
+# GitHub Copilot
+Use the /pair-programming skill to run the semantic /pair command.
+
+# Semantic protocol used throughout this document
+/pair plan <goal-or-design>
+/pair next
+/pair review [scope]
+/pair hint [scope] [level]
+/pair explain <scope>
+/pair show <scope>
+/pair take <scope>
+/pair challenge [scope]
+/pair status
+/pair rebase-plan
+```
+
+When the host invokes `pair-programming` and passes trailing arguments, treat the first
+argument as the semantic subcommand. For example:
+
+```text
+$pair-programming plan add retry
+/pair-programming plan add retry
+```
+
+both mean:
+
+```text
+/pair plan add retry
+```
+
+Do not require the host to implement a literal `/pair` slash command. Also accept
+natural-language equivalents.
+
+Trigger this skill automatically when the user asks for pair programming, guided coding,
+learning while implementing, "don't let AI write everything", a shadow/reference
+implementation, selective takeover, or similar human-in-control coding workflows.
 
 ### Workflow phase gate
 
