@@ -20,6 +20,22 @@ Commands covered:
 
 The scenario is adding a Capability Registry to an existing Plugin system.
 
+## Host invocation note
+
+This transcript uses the semantic `/pair ...` protocol so every workflow command is easy to
+read consistently. On a real host, invoke the same subcommand through the installed skill:
+
+```text
+Codex:                         $pair-programming plan ...
+Cursor / Claude Code / OpenCode: /pair-programming plan ...
+Gemini CLI:                     activate pair-programming, then provide /pair plan ...
+GitHub Copilot:                 use /pair-programming skill to run /pair plan ...
+Semantic intent:                /pair plan ...
+```
+
+The same mapping applies to `next`, `review`, `hint`, `explain`, `show`, `take`,
+`challenge`, `status`, and `rebase-plan`.
+
 ---
 
 ## 1. Start with only a feature goal — `/pair plan`

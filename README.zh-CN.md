@@ -28,6 +28,118 @@ Pair Programming Skill 的目标不是限制 AI，而是重新安排 AI 和人�
 
 ---
 
+## 安装
+
+### 推荐：直接让你的 Coding Agent 安装
+
+把下面这段话发给 Codex、Claude Code、Cursor、OpenCode、Gemini CLI 或 GitHub Copilot：
+
+> 帮我安装 Pair Programming Skill：
+> https://github.com/CPythoner/pair-programming-skill
+>
+> 请自动识别你当前运行在哪个 Coding Agent 中，并安装到该平台推荐的 Skill 目录。
+>
+> 如果平台支持，优先使用共享目录：
+> `.agents/skills/pair-programming/`
+>
+> 否则使用该平台原生的 Skill 目录。
+>
+> 如果已经存在旧版本，不要直接覆盖，先告诉我。
+>
+> 安装完成后：
+> 1. 检查 `SKILL.md` 和 supporting files 是否完整；
+> 2. 告诉我实际安装路径；
+> 3. 告诉我是否需要 reload / restart；
+> 4. 告诉我如何开始使用 Pair Programming Skill。
+
+这是推荐的安装方式，因为 Agent 可以根据自己所在的平台选择正确的发现目录，并在安装后直接验证结果。
+
+### 从终端安装
+
+推荐共享的 portable 安装：
+
+```bash
+git clone https://github.com/CPythoner/pair-programming-skill.git
+cd pair-programming-skill
+bash scripts/install.sh portable
+```
+
+默认安装到：
+
+```text
+.agents/skills/pair-programming/
+```
+
+用户级共享安装：
+
+```bash
+bash scripts/install.sh portable --scope user
+```
+
+Windows PowerShell：
+
+```powershell
+git clone https://github.com/CPythoner/pair-programming-skill.git
+cd pair-programming-skill
+.\scripts\install.ps1 portable
+```
+
+### 按平台安装
+
+如果不希望使用共享 portable 路径，也可以按宿主安装：
+
+```bash
+bash scripts/install.sh codex
+bash scripts/install.sh cursor
+bash scripts/install.sh gemini-cli
+bash scripts/install.sh github-copilot
+bash scripts/install.sh claude-code
+bash scripts/install.sh opencode
+```
+
+Cursor、Gemini CLI、GitHub Copilot 还可以使用各自原生目录：
+
+```bash
+bash scripts/install.sh cursor --native
+bash scripts/install.sh gemini-cli --native
+bash scripts/install.sh github-copilot --native
+```
+
+PowerShell：
+
+```powershell
+.\scripts\install.ps1 cursor -Native
+.\scripts\install.ps1 gemini-cli -Native
+.\scripts\install.ps1 github-copilot -Native
+```
+
+安装到其他项目时，Bash 使用 `--target /path/to/repo`，PowerShell 使用
+`-Target C:\path\to\repo`。
+
+已有安装默认不会被覆盖，只有显式传入 `--force` / `-Force` 才会替换。
+
+### 支持的平台
+
+| 平台 | 默认项目级目录 | 默认用户级目录 | 显式触发 |
+|---|---|---|---|
+| Portable Agent Skills | `.agents/skills/pair-programming/` | `~/.agents/skills/pair-programming/` | 由宿主决定 |
+| Codex | `.agents/skills/pair-programming/` | `~/.agents/skills/pair-programming/` | `$pair-programming plan ...` |
+| Cursor | `.agents/skills/pair-programming/` | `~/.agents/skills/pair-programming/` | `/pair-programming plan ...` |
+| Gemini CLI | `.agents/skills/pair-programming/` | `~/.agents/skills/pair-programming/` | 激活 Skill 后提供 `/pair ...` 语义 |
+| GitHub Copilot | `.agents/skills/pair-programming/` | `~/.agents/skills/pair-programming/` | 在 Prompt 中要求使用 `/pair-programming` |
+| Claude Code | `.claude/skills/pair-programming/` | `~/.claude/skills/pair-programming/` | `/pair-programming plan ...` |
+| OpenCode | `.opencode/skills/pair-programming/` | `~/.config/opencode/skills/pair-programming/` | `/pair-programming plan ...` |
+
+各平台详细发现机制和调用方式见 [adapters/README.md](adapters/README.md)。
+
+### 校验适配包
+
+```bash
+python3 scripts/validate-package.py
+```
+
+---
+
 ## 为什么需要它
 
 传统 Coding Agent 的典型模式是：
@@ -923,30 +1035,6 @@ takeover:
 
 ---
 
-## 安装
-
-将整个目录复制到支持 Skill 的 Coding Agent 对应 Skill 目录中：
-
-```text
-pair-programming/
-├── SKILL.md
-├── README.md
-├── reference/
-├── templates/
-└── examples/
-```
-
-如果平台只支持单文件 Skill，可以只安装 `SKILL.md`，但推荐保留整个目录，因为：
-
-- Design Gate 使用 `templates/design.md`；
-- Pitfall Journal 使用 `templates/pitfalls.yaml`；
-- Manifest / Progress 有标准模板；
-- 复杂操作有独立 reference 文档。
-
-具体 Skill 安装路径取决于 Codex、Claude Code、OpenCode、Cursor 等宿主。
-
----
-
 ## 项目结构
 
 ```text
@@ -955,12 +1043,26 @@ pair-programming-skill/
 ├── README.md
 ├── README.zh-CN.md
 ├── assets/
-│   ├── banner.svg
+│   ├── banner.png
 │   └── icon.png
 ├── SKILL.md
 │
 ├── examples/
 │   └── example-session.md
+│
+├── adapters/
+│   ├── README.md
+│   ├── codex.md
+│   ├── cursor.md
+│   ├── gemini-cli.md
+│   ├── github-copilot.md
+│   ├── claude-code.md
+│   └── opencode.md
+│
+├── scripts/
+│   ├── install.sh
+│   ├── install.ps1
+│   └── validate-package.py
 │
 ├── reference/
 │   ├── command-protocol.md
@@ -988,7 +1090,7 @@ pair-programming-skill/
 特别适合：
 
 - 中大型 Feature；
-- C++ / 系统软件；
+- 系统软件；
 - 架构改造；
 - 并发和生命周期复杂的代码；
 - Coding Agent 一次会改很多文件的任务；

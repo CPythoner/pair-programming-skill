@@ -29,6 +29,119 @@ Core principle:
 
 ---
 
+## Installation
+
+### Recommended: ask your coding agent to install it
+
+Copy this prompt to Codex, Claude Code, Cursor, OpenCode, Gemini CLI, or GitHub Copilot:
+
+> Install Pair Programming Skill from this repository:
+> https://github.com/CPythoner/pair-programming-skill
+>
+> Detect which coding agent you are running in and install the skill to the recommended
+> location for that host.
+>
+> Prefer the shared `.agents/skills/pair-programming/` location when the host supports it.
+> Otherwise use the host-native skill directory.
+>
+> Do not overwrite an existing installation without asking me first.
+>
+> After installation:
+> 1. verify that `SKILL.md` and its supporting files are present;
+> 2. tell me the actual installation path;
+> 3. tell me whether I need to reload or restart the agent;
+> 4. show me how to start Pair Programming Skill.
+
+This is the preferred installation path because the agent can inspect its own host,
+choose the right discovery directory, and verify the result.
+
+### Install from terminal
+
+For a shared portable installation:
+
+```bash
+git clone https://github.com/CPythoner/pair-programming-skill.git
+cd pair-programming-skill
+bash scripts/install.sh portable
+```
+
+This installs to:
+
+```text
+.agents/skills/pair-programming/
+```
+
+For a user-level shared install:
+
+```bash
+bash scripts/install.sh portable --scope user
+```
+
+Windows PowerShell:
+
+```powershell
+git clone https://github.com/CPythoner/pair-programming-skill.git
+cd pair-programming-skill
+.\scripts\install.ps1 portable
+```
+
+### Platform-specific installation
+
+Use a host-aware target when you do not want the shared portable location:
+
+```bash
+bash scripts/install.sh codex
+bash scripts/install.sh cursor
+bash scripts/install.sh gemini-cli
+bash scripts/install.sh github-copilot
+bash scripts/install.sh claude-code
+bash scripts/install.sh opencode
+```
+
+Cursor, Gemini CLI, and GitHub Copilot also support host-native directories:
+
+```bash
+bash scripts/install.sh cursor --native
+bash scripts/install.sh gemini-cli --native
+bash scripts/install.sh github-copilot --native
+```
+
+PowerShell:
+
+```powershell
+.\scripts\install.ps1 cursor -Native
+.\scripts\install.ps1 gemini-cli -Native
+.\scripts\install.ps1 github-copilot -Native
+```
+
+Install into another repository with `--target /path/to/repo` (Bash) or
+`-Target C:\path\to\repo` (PowerShell).
+
+Existing installations are not overwritten unless `--force` / `-Force` is explicitly
+supplied.
+
+### Supported hosts
+
+| Host | Default project path | Default user path | Explicit activation |
+|---|---|---|---|
+| Portable Agent Skills | `.agents/skills/pair-programming/` | `~/.agents/skills/pair-programming/` | Host-dependent |
+| Codex | `.agents/skills/pair-programming/` | `~/.agents/skills/pair-programming/` | `$pair-programming plan ...` |
+| Cursor | `.agents/skills/pair-programming/` | `~/.agents/skills/pair-programming/` | `/pair-programming plan ...` |
+| Gemini CLI | `.agents/skills/pair-programming/` | `~/.agents/skills/pair-programming/` | Activate the skill, then provide `/pair ...` intent |
+| GitHub Copilot | `.agents/skills/pair-programming/` | `~/.agents/skills/pair-programming/` | Ask to use `/pair-programming` |
+| Claude Code | `.claude/skills/pair-programming/` | `~/.claude/skills/pair-programming/` | `/pair-programming plan ...` |
+| OpenCode | `.opencode/skills/pair-programming/` | `~/.config/opencode/skills/pair-programming/` | `/pair-programming plan ...` |
+
+See [adapters/README.md](adapters/README.md) for host-specific details.
+
+### Validate the package
+
+```bash
+python3 scripts/validate-package.py
+```
+
+---
+
 ## Why this exists
 
 A typical autonomous coding-agent workflow looks like this:
@@ -925,36 +1038,6 @@ The purpose is simple:
 
 ---
 
-## Installation
-
-Copy the whole directory into the Skill directory used by your coding agent:
-
-```text
-pair-programming/
-├── SKILL.md
-├── README.md
-├── README.zh-CN.md
-├── assets/
-│   ├── banner.svg
-│   └── icon.png
-├── reference/
-├── templates/
-└── examples/
-```
-
-If the host only supports a single-file Skill, `SKILL.md` is the minimum installation.
-
-Keeping the whole directory is recommended because:
-
-- Design Gate uses `templates/design.md`;
-- Pitfall Journal uses `templates/pitfalls.yaml`;
-- Manifest / Progress have standard templates;
-- complex operations have dedicated reference documents.
-
-The exact Skill installation path depends on the host agent.
-
----
-
 ## Repository structure
 
 ```text
@@ -968,6 +1051,20 @@ pair-programming-skill/
 │
 ├── examples/
 │   └── example-session.md
+│
+├── adapters/
+│   ├── README.md
+│   ├── codex.md
+│   ├── cursor.md
+│   ├── gemini-cli.md
+│   ├── github-copilot.md
+│   ├── claude-code.md
+│   └── opencode.md
+│
+├── scripts/
+│   ├── install.sh
+│   ├── install.ps1
+│   └── validate-package.py
 │
 ├── reference/
 │   ├── command-protocol.md
