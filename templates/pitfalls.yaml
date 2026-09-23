@@ -1,0 +1,31 @@
+version: 1
+
+feature_slug: ""
+
+pitfalls: []
+# Example:
+#   - id: P001
+#     title: ""
+#     status: resolved       # resolved | unresolved | avoided
+#     severity: medium       # blocker | high | medium | low
+#     category: logic        # logic | api | lifetime | concurrency | build | dependency |
+#                            # platform | compatibility | test | performance | tooling |
+#                            # assumption | other
+#     discovered_in_phase: shadow
+#     discovered_at: ""
+#     symptom: ""
+#     trigger: ""
+#     evidence: []
+#     wrong_assumption: ""
+#     failed_attempts: []
+#     root_cause: ""
+#     resolution: ""
+#     workaround: ""
+#     affected_files: []
+#     affected_symbols: []
+#     validation: []
+#     related_steps: []
+#     lesson_for_human: ""
+#     avoidance: ""
+#     resolved_at: ""
+#     reference_commit: ""
