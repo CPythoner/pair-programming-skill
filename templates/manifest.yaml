@@ -1,0 +1,59 @@
+version: 1
+
+feature:
+  slug: ""
+  title: ""
+  goal: ""
+  non_goals: []
+  acceptance_criteria: []
+  assumptions: []
+  constraints: []
+
+design:
+  path: ".pair/design.md"
+  source: ""          # user_provided | ai_generated
+  status: ""          # awaiting_approval | approved
+  input_reference: ""
+  revision: 0
+  approved_revision: 0
+  approved_at: ""
+  approval_evidence: ""
+
+repository:
+  root: ""
+  parent: ""
+  name: ""
+  git_common_dir: ""
+  human_branch: ""
+  baseline_head: ""
+  detected:
+    language: []
+    build_system: []
+    package_manager: []
+    test_framework: []
+
+shadow:
+  generation: 1
+  worktree_root: ""
+  workspace_path: ""
+  solution_branch: ""
+  solution_commit: ""
+  solution_status: unverified
+  guide_branch: ""
+  guide_head: ""
+  reference_created_at: ""
+
+validation:
+  commands: []
+  last_results: []
+
+pitfalls:
+  path: ".pair/pitfalls.yaml"
+  total: 0
+  unresolved: []
+  feature_wide: []
+
+steps: []
+
+risks: []
+decisions: []

@@ -1,0 +1,39 @@
+version: 1
+
+interaction:
+  human_controls_main_workspace: true
+  auto_advance_after_review: false
+  explain_before_human_step: true
+  show_reference_by_default: false
+  challenge_enabled: true
+
+shadow:
+  branch_prefix: pair-shadow
+  worktree_layout: sibling_hidden
+  worktree_root_name: .pair-worktrees
+  single_physical_worktree_per_feature: true
+  never_checkout_inside_git_dir: true
+  keep_solution_branch: true
+  keep_guide_branch: true
+  push_by_default: false
+  merge_by_default: false
+
+limits:
+  preferred_files_per_step: 3
+  preferred_effective_diff_lines: 150
+  hard_effective_diff_lines: 300
+
+hints:
+  start_level: 1
+  max_level_before_takeover: 4
+  repeated_request_escalates: true
+
+takeover:
+  prefer_semantic_port: true
+  create_checkpoint: true
+  preserve_human_changes: true
+  return_control_after_apply: true
+
+validation:
+  focused_first: true
+  broad_suite_when_proportionate: true

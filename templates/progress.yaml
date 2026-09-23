@@ -1,0 +1,37 @@
+version: 1
+
+feature_slug: ""
+phase: design          # design | shadow | guide | guided_reconstruction | complete
+design_status: ""      # awaiting_approval | approved
+design_revision: 0
+approved_design_revision: 0
+
+human:
+  branch: ""
+  observed_head: ""
+
+current_step: ""
+
+steps: {}
+
+knowledge:
+  covered: []
+  revisit: []
+  user_decisions: []
+
+divergences: []
+
+pitfalls: {}
+# Example:
+# pitfalls:
+#   P001:
+#     surfaced: false
+#     surfaced_at_step: ""
+#     discussed: false
+
+last_hint:
+  step: ""
+  scope: ""
+  level: 0
+
+last_session: ""
