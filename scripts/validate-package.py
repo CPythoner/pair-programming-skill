@@ -122,13 +122,19 @@ if 'opencode/slash: "true"' not in frontmatter:
     fail('frontmatter must expose the skill in OpenCode slash catalog')
 
 for required_reference in (
-    "reference/recovery.md",
+    "reference/command-protocol.md",
+    "reference/design-gate.md",
+    "reference/decomposition.md",
     "reference/guide-quality.md",
+    "reference/pitfall-journal.md",
+    "reference/recovery.md",
+    "reference/review-rubric.md",
+    "reference/state-model.md",
     "reference/takeover.md",
     ".pair/operations/",
 ):
     if required_reference not in text:
-        fail(f"SKILL.md is missing hardened workflow reference: {required_reference}")
+        fail(f"SKILL.md is missing routed workflow reference: {required_reference}")
 
 example = (ROOT / "examples/example-session.md").read_text(encoding="utf-8")
 for command in COMMANDS:
