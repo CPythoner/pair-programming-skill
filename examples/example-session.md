@@ -43,7 +43,7 @@ The same mapping applies to `next`, `review`, `hint`, `explain`, `show`, `take`,
 User:
 
 ```text
-/pair plan 为 Plugin 增加 Capability Registry
+/pair plan add a Capability Registry to the Plugin system
 ```
 
 This is only a feature goal, not an implementation-ready design.
@@ -79,7 +79,7 @@ Please review .pair/design.md and confirm this revision before implementation.
 User:
 
 ```text
-方案没问题，按这个方案实现
+The design looks good. Implement this design.
 ```
 
 The agent records approval:
@@ -437,13 +437,16 @@ User:
 
 The agent:
 
-1. creates a checkpoint of the Human Workspace;
-2. identifies the Guide test delta;
-3. adapts the tests to the user's actual API names;
-4. applies only test changes;
-5. runs focused tests;
-6. records origin as `mixed`;
-7. tells the user which pitfalls the tests cover.
+1. runs recovery reconciliation;
+2. creates a checkpoint of the Human Workspace;
+3. creates `.pair/operations/T001.yaml` with status `prepared`;
+4. matches P002/P003 against the delegated test scope;
+5. identifies the Guide test delta;
+6. sets the operation to `applying` and adapts only the tests to the user's actual API;
+7. records the post-apply diff and sets status to `applied`;
+8. sets status to `validating` and runs focused tests;
+9. records origin as `mixed`, completes the operation, and clears `active_operation`;
+10. tells the user which pitfalls the tests cover.
 
 Agent:
 
@@ -461,6 +464,12 @@ Focused tests passed.
 
 Control returned to you.
 ```
+
+If the session had stopped after the test diff was applied but before validation, the next
+session would read the non-terminal operation first. If the recorded delta is already
+present and no contradictory Human drift exists, it classifies the takeover as
+`applied but not validated`, runs validation only, finalizes metadata, and does **not**
+apply the test patch a second time.
 
 ---
 

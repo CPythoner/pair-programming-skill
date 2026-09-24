@@ -214,6 +214,18 @@ Human Workspace 才是最终代码。
 └──────────────────────────────┘
 ```
 
+### 可靠性机制
+
+这个 workflow 也把长期 AI 编程当成可恢复的工程状态来处理：
+
+- **事务式 Takeover**：每次 `/pair take` 修改源码前，先创建 checkpoint 和持久化 operation journal。
+- **跨会话恢复**：新会话先把 `.pair/` metadata 与真实 Git 状态对账，再继续工作。
+- **版本化状态**：结构化 YAML 使用 `schema_version: 1`，对应 JSON Schema 放在 `schemas/`。
+- **上下文 Pitfall 匹配**：除了 Step，还可以按文件、Symbol、平台、配置和条件匹配。
+- **Guide 质量门槛**：进入 Guided Reconstruction 前检查提交线性、步骤大小、Step marker 和最终 tree 差异。
+
+这些机制面向跨多次会话、Human/AI 混合实现的长期 Feature。
+
 ---
 
 ## 1. Design Gate：先设计，再实现
@@ -551,6 +563,10 @@ Guide Branch 不要求和 Shadow 探索过程的 commit history 一致。
 
 > **正确 + 可验证 + 可教学。**
 
+进入 Guided Reconstruction 前会执行 Guide Quality Contract。可以使用
+`scripts/check-guide.py` 检查 merge commit、步骤过大、Step marker 和 Guide/Shadow
+最终 tree 差异。
+
 ---
 
 ## 6. Guided Reconstruction：你坐驾驶位
@@ -688,7 +704,7 @@ Level 5  AI takeover
 /pair show file src/plugin_manager.cpp
 /pair show symbol PluginManager::registerCapability
 /pair show tests
-/pair show cmake
+/pair show build
 ```
 
 ---
@@ -702,8 +718,8 @@ Level 5  AI takeover
 ```text
 /pair take step 3
 /pair take tests
-/pair take cmake
-/pair take conan
+/pair take build
+/pair take dependencies
 /pair take file src/foo.cpp
 /pair take symbol Foo::bar
 /pair take remaining
@@ -724,7 +740,8 @@ Manual Adaptation
 
 如果你的代码已经和 Shadow 不同，AI 不应该粗暴覆盖，而应该把参考实现的“意图”移植到你的当前设计里。
 
-每次 Takeover 前都会记录恢复信息。
+每次 Takeover 修改源码前都会创建 checkpoint 和 `.pair/operations/<id>.yaml`。
+如果会话中断，下一次先对账 operation 状态，只恢复缺失阶段，不会盲目重复应用 patch。
 
 ---
 
@@ -802,7 +819,9 @@ Skill 会：
 
 ## 状态文件
 
-Pair Programming Skill 使用 `.pair/` 保存当前 Feature 的工作状态：
+Pair Programming Skill 使用 `.pair/` 保存当前 Feature 的工作状态。
+
+结构化 YAML 使用 `schema_version: 1`，正式数据契约位于 `schemas/`。
 
 ```text
 .pair/
@@ -813,6 +832,7 @@ Pair Programming Skill 使用 `.pair/` 保存当前 Feature 的工作状态：
 ├── pitfalls.yaml
 ├── notes.md
 ├── checkpoints/
+├── operations/
 ├── patches/
 └── sessions/
 ```
@@ -869,6 +889,11 @@ Shadow 阶段积累的工程知识：
 ### `checkpoints/`
 
 在 `/pair take` 等操作前保存恢复信息，避免 AI 覆盖用户未提交工作。
+
+### `operations/`
+
+保存会修改 Human Workspace 的持久化操作日志。Takeover 会记录 scope、strategy、
+checkpoint、已应用文件、验证结果和恢复状态，因此会话中断后不需要盲目重复应用 patch。
 
 ### `sessions/`
 
@@ -995,7 +1020,8 @@ Skill 默认不会：
 - 因为 Shadow 与 Human 不同就强迫 Human 改成 Shadow
 - 在用户未要求时顺手重构无关代码
 
-任何可能覆盖 Human Workspace 的 Takeover 操作都应该先创建 checkpoint。
+任何会修改 Human Workspace 的 Takeover 都必须先创建 checkpoint 和 operation journal。
+出现无法解释的跨会话漂移时不会自动 reset；Human Workspace 始终是权威。
 
 ---
 
@@ -1025,8 +1051,20 @@ limits:
 takeover:
   prefer_semantic_port: true
   create_checkpoint: true
+  operation_journal: true
   preserve_human_changes: true
+  resume_incomplete_operation_first: true
   return_control_after_apply: true
+
+recovery:
+  check_on_session_start: true
+  fail_closed_on_unknown_drift: true
+  never_reset_human_workspace: true
+
+guide_quality:
+  require_linear_history: true
+  require_focused_validation: true
+  hard_limit_requires_exception: true
 ```
 
 这些默认值的目的只有一个：
@@ -1060,6 +1098,7 @@ pair-programming-skill/
 │   └── opencode.md
 │
 ├── scripts/
+│   ├── check-guide.py
 │   ├── install.sh
 │   ├── install.ps1
 │   └── validate-package.py
@@ -1068,10 +1107,19 @@ pair-programming-skill/
 │   ├── command-protocol.md
 │   ├── decomposition.md
 │   ├── design-gate.md
+│   ├── guide-quality.md
 │   ├── pitfall-journal.md
+│   ├── recovery.md
 │   ├── review-rubric.md
 │   ├── state-model.md
 │   └── takeover.md
+│
+├── schemas/
+│   ├── config.schema.json
+│   ├── manifest.schema.json
+│   ├── pitfalls.schema.json
+│   ├── progress.schema.json
+│   └── takeover-operation.schema.json
 │
 └── templates/
     ├── config.yaml
@@ -1080,7 +1128,8 @@ pair-programming-skill/
     ├── notes.md
     ├── pitfalls.yaml
     ├── progress.yaml
-    └── session-summary.md
+    ├── session-summary.md
+    └── takeover-operation.yaml
 ```
 
 ---

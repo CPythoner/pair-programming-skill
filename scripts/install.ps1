@@ -58,6 +58,9 @@ try {
     Copy-Item -Recurse (Join-Path $SourceRoot "reference") (Join-Path $Tmp "reference")
     Copy-Item -Recurse (Join-Path $SourceRoot "templates") (Join-Path $Tmp "templates")
     Copy-Item -Recurse (Join-Path $SourceRoot "examples") (Join-Path $Tmp "examples")
+    Copy-Item -Recurse (Join-Path $SourceRoot "schemas") (Join-Path $Tmp "schemas")
+    New-Item -ItemType Directory -Force -Path (Join-Path $Tmp "scripts") | Out-Null
+    Copy-Item (Join-Path $SourceRoot "scripts/check-guide.py") (Join-Path $Tmp "scripts/check-guide.py")
     New-Item -ItemType Directory -Force -Path $Parent | Out-Null
     Move-Item $Tmp $Dest
 }

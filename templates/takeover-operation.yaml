@@ -1,0 +1,56 @@
+schema_version: 1
+
+operation:
+  id: ""
+  kind: takeover
+  status: prepared
+  # prepared | applying | applied | validating | completed |
+  # interrupted | needs_reconciliation | abandoned
+
+  scope:
+    type: ""            # step | file | symbol | tests | build | dependencies | tooling | remaining | all
+    value: ""
+
+  strategy: ""          # semantic_port | cherry_pick | three_way_patch | manual_adaptation
+
+  source:
+    guide_commit: ""
+    solution_commit: ""
+    reference_paths: []
+
+  checkpoint:
+    path: ""
+    branch: ""
+    head: ""
+    status_porcelain: ""
+    staged_diff_path: ""
+    unstaged_diff_path: ""
+    untracked_files: []
+
+  preflight:
+    dependencies_satisfied: []
+    conflicts: []
+    pitfall_ids: []
+
+  apply:
+    started_at: ""
+    completed_at: ""
+    changed_files: []
+    changed_symbols: []
+    adaptations: []
+    post_apply_diff_path: ""
+
+  validation:
+    status: pending      # pending | passed | failed | limited
+    commands: []
+    results: []
+
+  recovery:
+    last_checked_at: ""
+    classification: ""
+    observed_head: ""
+    observed_dirty_paths: []
+    notes: []
+
+  created_at: ""
+  updated_at: ""

@@ -87,7 +87,7 @@ While awaiting approval:
 - `/pair next`, `/pair take`, or other implementation requests must not create Shadow or
   modify implementation code; remind the user that the current design revision needs
   explicit approval.
-- an explicit phrase such as "按这个方案实现" counts as approval and may immediately
+- an explicit phrase such as "implement this design" counts as approval and may immediately
   continue into Shadow implementation in the same turn.
 
 ## `/pair next [step]`
@@ -101,7 +101,7 @@ Output:
 - constraints;
 - files/symbols;
 - validation;
-- relevant Shadow pitfalls (proactively, when mapped to this step);
+- relevant Shadow pitfalls matched by step/file/symbol/context;
 - first coding move.
 
 Stop at Human coding checkpoint.
@@ -148,8 +148,23 @@ Mark output as reference.
 ## `/pair take <scope>`
 
 Modifies Human Workspace.
-Create checkpoint first.
-Validate after.
+
+Before source modification:
+- run recovery reconciliation;
+- refuse to start if another takeover is non-terminal;
+- create checkpoint;
+- create `.pair/operations/<id>.yaml`;
+- record scope, strategy, dependencies, conflicts, and matched Pitfalls.
+
+Lifecycle:
+`prepared -> applying -> applied -> validating -> completed`.
+
+If interrupted, reconcile the recorded operation before applying anything again. Distinguish
+not-applied, partially-applied, applied-but-unvalidated, stale-metadata, and ambiguous drift.
+Never blindly replay a patch.
+
+Validate after application. Clear `progress.active_operation` only after completion or an
+explicitly recorded abandonment.
 
 ## `/pair challenge [scope]`
 
@@ -162,9 +177,12 @@ Read metadata + actual git status.
 Do not trust stale metadata blindly.
 
 Also report:
+- recovery classification and workspace drift, if any;
+- active/non-terminal takeover operation;
 - unresolved Shadow pitfalls;
-- pitfalls related to the current/next step;
-- pitfall entries that have not yet been surfaced to the user.
+- pitfalls relevant by step/file/symbol/context;
+- pitfall entries that have not yet been surfaced to the user;
+- Guide quality warnings/failures when reconstruction depends on the Guide.
 
 ## `/pair rebase-plan`
 

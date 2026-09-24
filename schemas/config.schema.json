@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/CPythoner/pair-programming-skill/schemas/config.schema.json",
+  "title": "Pair Programming Config",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "interaction",
+    "shadow",
+    "limits",
+    "hints",
+    "takeover",
+    "recovery",
+    "guide_quality",
+    "validation"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "interaction": {
+      "type": "object",
+      "required": [
+        "human_controls_main_workspace",
+        "auto_advance_after_review",
+        "explain_before_human_step",
+        "show_reference_by_default",
+        "challenge_enabled"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "human_controls_main_workspace": {
+          "type": "boolean"
+        },
+        "auto_advance_after_review": {
+          "type": "boolean"
+        },
+        "explain_before_human_step": {
+          "type": "boolean"
+        },
+        "show_reference_by_default": {
+          "type": "boolean"
+        },
+        "challenge_enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "shadow": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "limits": {
+      "type": "object",
+      "required": [
+        "preferred_files_per_step",
+        "preferred_effective_diff_lines",
+        "hard_effective_diff_lines"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "preferred_files_per_step": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "preferred_effective_diff_lines": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "hard_effective_diff_lines": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "hints": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "takeover": {
+      "type": "object",
+      "required": [
+        "prefer_semantic_port",
+        "create_checkpoint",
+        "operation_journal",
+        "verify_scope_before_apply",
+        "preserve_human_changes",
+        "resume_incomplete_operation_first",
+        "return_control_after_apply"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "prefer_semantic_port": {
+          "type": "boolean"
+        },
+        "create_checkpoint": {
+          "type": "boolean"
+        },
+        "operation_journal": {
+          "type": "boolean"
+        },
+        "verify_scope_before_apply": {
+          "type": "boolean"
+        },
+        "preserve_human_changes": {
+          "type": "boolean"
+        },
+        "resume_incomplete_operation_first": {
+          "type": "boolean"
+        },
+        "return_control_after_apply": {
+          "type": "boolean"
+        }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "required": [
+        "check_on_session_start",
+        "fail_closed_on_unknown_drift",
+        "reconcile_metadata_when_safe",
+        "never_reset_human_workspace"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "check_on_session_start": {
+          "type": "boolean"
+        },
+        "fail_closed_on_unknown_drift": {
+          "type": "boolean"
+        },
+        "reconcile_metadata_when_safe": {
+          "type": "boolean"
+        },
+        "never_reset_human_workspace": {
+          "type": "boolean"
+        }
+      }
+    },
+    "guide_quality": {
+      "type": "object",
+      "required": [
+        "require_linear_history",
+        "require_focused_validation",
+        "hard_limit_requires_exception",
+        "compare_final_tree_with_solution"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "require_linear_history": {
+          "type": "boolean"
+        },
+        "require_focused_validation": {
+          "type": "boolean"
+        },
+        "hard_limit_requires_exception": {
+          "type": "boolean"
+        },
+        "compare_final_tree_with_solution": {
+          "type": "boolean"
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

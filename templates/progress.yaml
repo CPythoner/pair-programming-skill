@@ -1,4 +1,4 @@
-version: 1
+schema_version: 1
 
 feature_slug: ""
 phase: design          # design | shadow | guide | guided_reconstruction | complete
@@ -9,6 +9,25 @@ approved_design_revision: 0
 human:
   branch: ""
   observed_head: ""
+
+workspace_snapshot:
+  captured_at: ""
+  branch: ""
+  head: ""
+  status_porcelain: ""
+  dirty_paths: []
+
+recovery:
+  state: clean          # clean | reconciled | attention_required
+  checked_at: ""
+  classification: ""
+  reasons: []
+
+active_operation:
+  id: ""
+  path: ""
+  kind: ""
+  status: ""
 
 current_step: ""
 
@@ -28,6 +47,7 @@ pitfalls: {}
 #     surfaced: false
 #     surfaced_at_step: ""
 #     discussed: false
+#     last_matched_by: []
 
 last_hint:
   step: ""
