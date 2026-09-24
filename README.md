@@ -1,6 +1,6 @@
 # Pair Programming Skill
 
-**English** | [简体中文](README.zh-CN.md)
+**English** | [Simplified Chinese](README.zh-CN.md)
 
 <p align="center">
   <img src="assets/banner.png" alt="Pair Programming Skill Banner" width="100%" />
@@ -220,6 +220,18 @@ The workflow has four major layers:
 │ implements and owns            │
 └────────────────────────────────┘
 ```
+
+### Reliability model
+
+The workflow also treats long-running AI work as recoverable engineering state:
+
+- **Transactional takeover** — every `/pair take` records a checkpoint and durable operation journal before source modification.
+- **Session recovery** — a new session reconciles `.pair/` metadata with actual Git state before continuing.
+- **Versioned state** — structured YAML uses `schema_version: 1` with JSON Schemas under `schemas/`.
+- **Contextual Pitfalls** — Pitfalls can match by step, file, symbol, platform, configuration, or condition.
+- **Guide quality gate** — Guide commits are checked for linearity, scope size, stable step markers, and final-tree differences before reconstruction.
+
+These rules are designed for features that may span multiple sessions and partial Human/AI ownership.
 
 ---
 
@@ -550,6 +562,10 @@ Its goal is:
 
 > **correct + verifiable + teachable**
 
+Before guided reconstruction, the Guide is checked against the quality contract in
+`reference/guide-quality.md`. `scripts/check-guide.py` can detect merge commits, oversized
+steps, unstable commit markers, and final-tree differences from the Shadow solution.
+
 ---
 
 ## 6. Guided Reconstruction — the user stays in the driver's seat
@@ -722,7 +738,9 @@ Manual Adaptation
 
 If Human code has diverged from Shadow, AI should adapt the reference intent to the current Human design instead of overwriting it wholesale.
 
-Each takeover creates recovery evidence first.
+Each takeover creates recovery evidence and a durable `.pair/operations/<id>.yaml` journal
+before source modification. If a session is interrupted, the next session reconciles that
+operation and resumes only the missing phase.
 
 ---
 
@@ -802,7 +820,9 @@ It never resets Human code back to the original Shadow solution.
 
 ## State files
 
-Pair Programming Skill keeps feature state under `.pair/`:
+Pair Programming Skill keeps feature state under `.pair/`.
+
+Structured YAML state uses `schema_version: 1` and the contracts in `schemas/`.
 
 ```text
 .pair/
@@ -813,6 +833,7 @@ Pair Programming Skill keeps feature state under `.pair/`:
 ├── pitfalls.yaml
 ├── notes.md
 ├── checkpoints/
+├── operations/
 ├── patches/
 └── sessions/
 ```
@@ -869,6 +890,12 @@ Stores design decisions, important discoveries, and deferred work.
 ### `checkpoints/`
 
 Stores recovery evidence before operations such as `/pair take`, so user work is not silently overwritten.
+
+### `operations/`
+
+Stores durable mutation journals. A takeover records its scope, strategy, checkpoint, applied
+files, validation, and recovery status here so an interrupted session can resume without
+blindly replaying a patch.
 
 ### `sessions/`
 
@@ -999,7 +1026,9 @@ By default, the Skill does not:
 - force Human code to match Shadow merely because it differs;
 - opportunistically refactor unrelated code.
 
-Any takeover operation that may affect Human work should create a checkpoint first.
+Any takeover operation that may affect Human work must create a checkpoint and operation
+journal first. Unknown session drift never triggers an automatic reset; Human Workspace
+remains authoritative.
 
 ---
 
@@ -1028,8 +1057,20 @@ limits:
 takeover:
   prefer_semantic_port: true
   create_checkpoint: true
+  operation_journal: true
   preserve_human_changes: true
+  resume_incomplete_operation_first: true
   return_control_after_apply: true
+
+recovery:
+  check_on_session_start: true
+  fail_closed_on_unknown_drift: true
+  never_reset_human_workspace: true
+
+guide_quality:
+  require_linear_history: true
+  require_focused_validation: true
+  hard_limit_requires_exception: true
 ```
 
 The purpose is simple:
@@ -1046,6 +1087,7 @@ pair-programming-skill/
 ├── README.md
 ├── README.zh-CN.md
 ├── assets/
+│   ├── banner.png
 │   └── icon.png
 ├── SKILL.md
 │
@@ -1062,6 +1104,7 @@ pair-programming-skill/
 │   └── opencode.md
 │
 ├── scripts/
+│   ├── check-guide.py
 │   ├── install.sh
 │   ├── install.ps1
 │   └── validate-package.py
@@ -1070,10 +1113,19 @@ pair-programming-skill/
 │   ├── command-protocol.md
 │   ├── decomposition.md
 │   ├── design-gate.md
+│   ├── guide-quality.md
 │   ├── pitfall-journal.md
+│   ├── recovery.md
 │   ├── review-rubric.md
 │   ├── state-model.md
 │   └── takeover.md
+│
+├── schemas/
+│   ├── config.schema.json
+│   ├── manifest.schema.json
+│   ├── pitfalls.schema.json
+│   ├── progress.schema.json
+│   └── takeover-operation.schema.json
 │
 └── templates/
     ├── config.yaml
@@ -1082,7 +1134,8 @@ pair-programming-skill/
     ├── notes.md
     ├── pitfalls.yaml
     ├── progress.yaml
-    └── session-summary.md
+    ├── session-summary.md
+    └── takeover-operation.yaml
 ```
 
 ---

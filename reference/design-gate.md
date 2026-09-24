@@ -81,10 +81,10 @@ review/planning only. Save the canonical design and record it as `user_provided`
 ## Approval examples
 
 These may approve the current revision when context is unambiguous:
-- 确认
-- 方案没问题
-- 按这个方案实现
-- 开始实现
+- confirmed
+- the design looks good
+- implement this design
+- start implementation
 - approved
 
 Do not infer approval from silence or unrelated follow-up questions.

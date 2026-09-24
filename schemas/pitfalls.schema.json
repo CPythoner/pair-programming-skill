@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/CPythoner/pair-programming-skill/schemas/pitfalls.schema.json",
+  "title": "Pair Programming Pitfall Journal",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "feature_slug",
+    "pitfalls"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "feature_slug": {
+      "type": "string"
+    },
+    "pitfalls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "status",
+          "severity",
+          "category",
+          "confidence",
+          "symptom",
+          "evidence",
+          "affected_files",
+          "affected_symbols",
+          "applies_when",
+          "validation",
+          "related_steps",
+          "lesson_for_human",
+          "avoidance"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^P[0-9]{3,}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "resolved",
+              "unresolved",
+              "avoided"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "blocker",
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "logic",
+              "api",
+              "lifetime",
+              "concurrency",
+              "build",
+              "dependency",
+              "platform",
+              "compatibility",
+              "test",
+              "performance",
+              "tooling",
+              "assumption",
+              "other"
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "probable",
+              "hypothesis"
+            ]
+          },
+          "discovered_by": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "test",
+                "build",
+                "runtime",
+                "source",
+                "docs",
+                "review",
+                "other"
+              ]
+            }
+          },
+          "symptom": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "array"
+          },
+          "affected_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "affected_symbols": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "applies_when": {
+            "type": "object",
+            "required": [
+              "files",
+              "symbols",
+              "platforms",
+              "configurations",
+              "conditions"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "symbols": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "platforms": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "configurations": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "conditions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "validation": {
+            "type": "array"
+          },
+          "related_steps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "review_assertion": {
+            "type": "string"
+          },
+          "teach": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "lesson_for_human": {
+            "type": "string"
+          },
+          "avoidance": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

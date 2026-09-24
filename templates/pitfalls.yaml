@@ -1,4 +1,4 @@
-version: 1
+schema_version: 1
 
 feature_slug: ""
 
@@ -11,8 +11,10 @@ pitfalls: []
 #     category: logic        # logic | api | lifetime | concurrency | build | dependency |
 #                            # platform | compatibility | test | performance | tooling |
 #                            # assumption | other
+#     confidence: confirmed  # confirmed | probable | hypothesis
 #     discovered_in_phase: shadow
 #     discovered_at: ""
+#     discovered_by: []      # test | build | runtime | source | docs | review | other
 #     symptom: ""
 #     trigger: ""
 #     evidence: []
@@ -23,8 +25,19 @@ pitfalls: []
 #     workaround: ""
 #     affected_files: []
 #     affected_symbols: []
+#     applies_when:
+#       files: []
+#       symbols: []
+#       platforms: []
+#       configurations: []
+#       conditions: []
 #     validation: []
 #     related_steps: []
+#     review_assertion: ""
+#     teach:
+#       timing: before_step  # before_step | during_review | on_takeover | handoff
+#       hint_level: 1
+#       summary: ""
 #     lesson_for_human: ""
 #     avoidance: ""
 #     resolved_at: ""

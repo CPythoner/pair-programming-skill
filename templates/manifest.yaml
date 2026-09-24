@@ -1,4 +1,4 @@
-version: 1
+schema_version: 1
 
 feature:
   slug: ""
@@ -53,7 +53,33 @@ pitfalls:
   unresolved: []
   feature_wide: []
 
+guide_quality:
+  status: pending       # pending | passed | warnings | failed
+  checked_at: ""
+  base: ""
+  guide_head: ""
+  solution_commit: ""
+  checker: "scripts/check-guide.py"
+  warnings: []
+  failures: []
+
 steps: []
+# Example step shape:
+# - id: capability-registry
+#   title: "Add CapabilityRegistry"
+#   goal: ""
+#   dependencies: []
+#   files: []
+#   symbols: []
+#   validation: []
+#   pitfall_ids: []
+#   guide_commit: ""
+#   file_count: 0
+#   effective_diff_lines: 0
+#   size_exception_reason: ""
+#   quality:
+#     focused_validation: false
+#     future_step_leakage_checked: false
 
 risks: []
 decisions: []

@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/CPythoner/pair-programming-skill/schemas/progress.schema.json",
+  "title": "Pair Programming Progress",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "feature_slug",
+    "phase",
+    "human",
+    "workspace_snapshot",
+    "recovery",
+    "active_operation",
+    "steps",
+    "knowledge",
+    "divergences",
+    "pitfalls",
+    "last_hint",
+    "last_session"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "feature_slug": {
+      "type": "string"
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "design",
+        "shadow",
+        "guide",
+        "guided_reconstruction",
+        "complete"
+      ]
+    },
+    "design_status": {
+      "type": "string",
+      "enum": [
+        "",
+        "awaiting_approval",
+        "approved"
+      ]
+    },
+    "design_revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "approved_design_revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "human": {
+      "type": "object",
+      "required": [
+        "branch",
+        "observed_head"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "observed_head": {
+          "type": "string"
+        }
+      }
+    },
+    "workspace_snapshot": {
+      "type": "object",
+      "required": [
+        "captured_at",
+        "branch",
+        "head",
+        "status_porcelain",
+        "dirty_paths"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "captured_at": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "head": {
+          "type": "string"
+        },
+        "status_porcelain": {
+          "type": "string"
+        },
+        "dirty_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "required": [
+        "state",
+        "checked_at",
+        "classification",
+        "reasons"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "clean",
+            "reconciled",
+            "attention_required"
+          ]
+        },
+        "checked_at": {
+          "type": "string"
+        },
+        "classification": {
+          "type": "string"
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "active_operation": {
+      "type": "object",
+      "required": [
+        "id",
+        "path",
+        "kind",
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "current_step": {
+      "type": "string"
+    },
+    "steps": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "active",
+              "review",
+              "completed",
+              "skipped",
+              "superseded"
+            ]
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "human",
+              "ai",
+              "mixed"
+            ]
+          },
+          "validation": {
+            "type": "array"
+          },
+          "hint_level": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "divergences": {
+            "type": "array"
+          },
+          "notes": {
+            "type": "array"
+          }
+        }
+      }
+    },
+    "knowledge": {
+      "type": "object",
+      "required": [
+        "covered",
+        "revisit",
+        "user_decisions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "covered": {
+          "type": "array"
+        },
+        "revisit": {
+          "type": "array"
+        },
+        "user_decisions": {
+          "type": "array"
+        }
+      }
+    },
+    "divergences": {
+      "type": "array"
+    },
+    "pitfalls": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "last_hint": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "last_session": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

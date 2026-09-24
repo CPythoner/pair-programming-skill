@@ -86,6 +86,12 @@ After the Shadow solution is verified, create a third artifact:
 16. Shadow pitfalls are teaching assets, not disposable debugging history. Record every
     meaningful pitfall/discovery while implementing in Shadow, map it to the later Guide step,
     and proactively tell the user about it before or during the corresponding guided work.
+17. Human Workspace mutation is transactional: every `/pair take` creates checkpoint evidence
+    and a durable operation journal before source modification.
+18. New sessions reconcile persistent state against actual Git state before continuing. Never
+    "recover" by resetting Human Workspace to metadata.
+19. Guide Branch is a teaching artifact with an explicit quality contract; do not begin guided
+    reconstruction from a structurally or semantically failed Guide.
 
 ## Invocation
 
@@ -194,11 +200,17 @@ Store persistent pair-programming metadata in:
 ├── notes.md
 ├── pitfalls.yaml
 ├── checkpoints/
+├── operations/
 ├── patches/
 └── sessions/
 ```
 
 Do not put Shadow worktree contents under `.pair/`.
+
+Structured YAML state uses `schema_version: 1` and the contracts under `schemas/`.
+Legacy early state using `version: 1` may be read as schema version 1, but canonicalize it
+on the next write. If a state file has a newer unsupported schema version, stop rather than
+guessing.
 
 Default Shadow branches:
 
@@ -297,14 +309,19 @@ Each entry must have a stable ID such as `P001` and should capture:
 - status: `resolved | unresolved | avoided`;
 - severity: `blocker | high | medium | low`;
 - category;
+- confidence: `confirmed | probable | hypothesis`;
+- discovery source(s);
 - symptom / evidence;
 - triggering context;
 - wrong assumption or tempting wrong approach;
 - root cause;
 - resolution or current workaround;
 - affected files/symbols;
+- contextual applicability: files/symbols/platforms/configurations/conditions;
 - validation proving the resolution;
 - related Guide step IDs;
+- optional `review_assertion`;
+- optional teaching timing/hint guidance;
 - `lesson_for_human`;
 - `avoidance`: what the user should do differently during reconstruction.
 
@@ -334,6 +351,11 @@ Every Guide step in `manifest.yaml` should also carry a `pitfall_ids` list. This
 a durable mapping in both directions.
 
 If a pitfall concerns the whole feature rather than one step, use `related_steps: ["*"]`.
+
+Step mapping is the strongest signal, but it is not the only one. Before `next`, `review`,
+or `take`, also match Pitfalls against current target files, symbols, platform,
+configuration, and recorded conditions. This keeps Pitfall teaching useful after Human
+divergence or `/pair rebase-plan`. Record why each surfaced Pitfall matched.
 
 ### During guided reconstruction
 
@@ -541,10 +563,10 @@ Report the design path, summarize the key decisions, and ask the user to review/
 design.
 
 Examples of explicit approval include:
-- "确认"
-- "方案没问题"
-- "按这个方案实现"
-- "开始实现"
+- "confirmed"
+- "the design looks good"
+- "implement this design"
+- "start implementation"
 - "approved"
 
 When the user requests changes:
@@ -776,10 +798,16 @@ Then reconstruct the verified solution as a pedagogical commit chain.
 For each step:
 1. implement only that step's intended delta;
 2. format as needed;
-3. run the step's verification;
-4. commit with a stable step marker, e.g.:
-   `pair(step:registry): implement capability registry`
-5. record the commit SHA in the corresponding manifest step.
+3. run the step's focused verification;
+4. check for future-step leakage and unrelated refactors;
+5. commit with a stable step marker, e.g.:
+   `pair(step:registry): implement capability registry`;
+6. record commit SHA, file count, effective diff lines, and any size exception in the
+   corresponding manifest step.
+
+Before Guided Reconstruction, apply `reference/guide-quality.md`. Run
+`scripts/check-guide.py` when available and record `manifest.guide_quality`. A Guide with
+quality status `failed` must be repaired before it is used for teaching/takeover.
 
 The Guide Branch should converge to behavior equivalent to the verified Shadow solution.
 Exact textual identity is not required.
@@ -954,45 +982,76 @@ Supported scopes:
 - `symbol <qualified-name>`
 - `tests`
 - `build`
+- `dependencies`
+- `tooling`
 - `remaining`
 - `all`
 
-### Takeover safety protocol
+### Transactional takeover protocol
 
-Before applying:
-1. inspect current Human Workspace diff and index;
-2. create a non-destructive checkpoint under `.pair/checkpoints/`;
-3. identify dependencies already implemented by the user;
-4. compute the smallest relevant reference delta;
-5. detect conflicts with human changes.
+Before any source modification:
+
+1. run session recovery and compare metadata with actual Git state;
+2. if another takeover is non-terminal, reconcile it first;
+3. inspect current Human Workspace diff/index/untracked scope;
+4. validate dependencies and requested scope;
+5. match relevant Pitfalls by step/file/symbol/context;
+6. create `.pair/checkpoints/<operation-id>/`;
+7. create `.pair/operations/<operation-id>.yaml` from the takeover template;
+8. set `progress.active_operation`;
+9. choose the smallest safe application strategy.
+
+Operation lifecycle:
+
+```text
+prepared -> applying -> applied -> validating -> completed
+```
+
+Interruption/ambiguity may use:
+
+```text
+interrupted | needs_reconciliation | abandoned
+```
 
 Application strategy, in order:
 
-1. **Semantic port** — preferred when the Human code has diverged.
-2. **Cherry-pick guide commit** — only when branch state and dependencies align cleanly.
-3. **3-way patch application** — when safe.
-4. **Manual adaptation** — preserve user design and port only required behavior.
+1. **Semantic port** — preferred when Human code has diverged.
+2. **Cherry-pick Guide commit** — only when state/dependencies align and the whole step is requested.
+3. **3-way patch** — only with a small, understood conflict surface.
+4. **Manual adaptation** — preserve Human design and port only requested behavior.
 
-Never resolve a conflict by overwriting the user's version wholesale unless the user
-explicitly asks for the entire reference implementation.
+Never overwrite a whole Human file merely because Shadow/Guide works.
 
-After applying:
-- show a concise summary of changed files/symbols;
-- explain any adaptation from the reference;
-- run the scope's validation;
-- update progress origin to `ai` or `mixed`;
-- return control to the user.
+After the intended code is present:
+- record changed files/symbols and adaptations;
+- save post-apply evidence;
+- run focused validation, then broader validation when proportionate;
+- update origin to `ai` or `mixed`;
+- update Pitfall communication state;
+- mark operation completed and clear `active_operation`;
+- return control.
+
+### Interrupted takeover
+
+On resume, do not replay the patch blindly. Reconcile checkpoint/operation evidence with
+current Git state and classify it as:
+
+- not applied;
+- partially applied;
+- applied but not validated;
+- completed with stale metadata;
+- diverged/ambiguous.
+
+Resume only the missing phase. If ambiguous, preserve Human Workspace, set
+`needs_reconciliation`, explain the mismatch, and stop automatic modification.
+
+Read `reference/takeover.md` for the complete protocol.
 
 ### `take remaining` and `take all`
 
-These are explicit requests for autonomous completion.
-
-Even then:
-- preserve user work;
-- use the current Human implementation as the new source state;
-- port only missing behavior;
-- validate;
-- give a final architecture + diff walkthrough.
+These are explicit requests for autonomous completion, but the same transaction/recovery
+rules still apply. Preserve Human work, port only missing behavior, validate, provide a
+walkthrough, and return control unless continued autonomy was explicitly requested.
 
 ## `/pair challenge [scope]`
 
@@ -1025,6 +1084,8 @@ Report compact progress from `.pair/manifest.yaml` and `.pair/progress.yaml`.
 
 Include:
 - feature and baseline;
+- recovery classification / unexplained workspace drift;
+- active takeover operation, if any;
 - Shadow verification status;
 - current guided step;
 - completed steps;
@@ -1034,6 +1095,7 @@ Include:
 - unresolved risks;
 - unresolved Shadow pitfalls;
 - relevant pitfalls not yet surfaced to the user;
+- Guide quality warnings/failures when relevant;
 - concepts already covered;
 - concepts to revisit;
 - recommended next action.
@@ -1167,7 +1229,24 @@ Prefer wording such as:
 
 rather than psychological judgments.
 
-## Session continuity
+## Session continuity and crash recovery
+
+At the start of a substantial new session, and before any mutating `/pair` operation:
+
+1. validate supported state schema versions;
+2. read manifest/progress/latest session;
+3. inspect actual repo root, Human branch, HEAD, status, and diff summary;
+4. inspect `progress.active_operation`;
+5. verify solution/Guide refs and current design approval;
+6. classify recovery using `reference/recovery.md`;
+7. reconcile metadata only when the observed Git state is unambiguous;
+8. update `workspace_snapshot` and `recovery`.
+
+If a takeover is non-terminal, reconcile it before any new source modification.
+
+If drift is ambiguous, set recovery state to `attention_required`, preserve Human Workspace,
+explain the mismatch, and stop automatic mutation. Never recover by resetting Human code to
+metadata.
 
 At the end of a substantial session, write:
 
@@ -1175,22 +1254,9 @@ At the end of a substantial session, write:
 .pair/sessions/YYYYMMDD-HHMM.md
 ```
 
-with:
-- current step;
-- what changed;
-- validation results;
-- important decisions;
-- divergences from reference;
-- next concrete action.
-
-On a later session:
-1. read manifest;
-2. read progress;
-3. read the latest session summary;
-4. verify repository HEAD/status still matches expectations;
-5. continue from the current step.
-
-If the branch moved independently, reconcile state before proceeding.
+including Human branch/HEAD/status, recovery classification, active operation, current step,
+changes, validation, decisions/divergences, Pitfalls, and next concrete action. Update
+`progress.last_session` only after the summary exists.
 
 ## Interaction style
 
@@ -1260,9 +1326,12 @@ Read these files when the corresponding operation is needed:
 
 - `reference/design-gate.md` — plan classification, revision-scoped approval, and gate behavior.
 - `reference/pitfall-journal.md` — capture, mapping, and proactive teaching of Shadow pitfalls.
-- `reference/state-model.md` — manifest/progress semantics.
+- `reference/state-model.md` — versioned persistent state and operation semantics.
+- `reference/recovery.md` — session/crash reconciliation and drift classification.
 - `reference/decomposition.md` — turning a verified implementation into guide steps.
+- `reference/guide-quality.md` — Guide commit contract and quality gate.
 - `reference/review-rubric.md` — semantic review priorities.
-- `reference/takeover.md` — safe selective code transplantation.
+- `reference/takeover.md` — transactional selective code transplantation and interrupted-operation recovery.
 - `reference/command-protocol.md` — command parsing and expected output.
-- `templates/*.yaml` — initialize state.
+- `schemas/*.schema.json` — persistent state contracts.
+- `templates/*.yaml` — initialize state and takeover operation records.

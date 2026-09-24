@@ -1,4 +1,4 @@
-version: 1
+schema_version: 1
 
 interaction:
   human_controls_main_workspace: true
@@ -31,8 +31,23 @@ hints:
 takeover:
   prefer_semantic_port: true
   create_checkpoint: true
+  operation_journal: true
+  verify_scope_before_apply: true
   preserve_human_changes: true
+  resume_incomplete_operation_first: true
   return_control_after_apply: true
+
+recovery:
+  check_on_session_start: true
+  fail_closed_on_unknown_drift: true
+  reconcile_metadata_when_safe: true
+  never_reset_human_workspace: true
+
+guide_quality:
+  require_linear_history: true
+  require_focused_validation: true
+  hard_limit_requires_exception: true
+  compare_final_tree_with_solution: true
 
 validation:
   focused_first: true
