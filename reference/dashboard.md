@@ -10,7 +10,7 @@ The dashboard is a projection of existing Pair state, not an alternative state s
 
 ## Input
 
-Read only the existing project state:
+Read existing Pair state only:
 
 ```text
 .pair/
@@ -23,11 +23,11 @@ Read only the existing project state:
 └── checkpoints/
 ```
 
-Do not create missing Pair state only for dashboard generation.
+Do not initialize or rewrite `.pair` state only for dashboard generation.
 
-## Generation pipeline
+## Generation contract
 
-The implementation must follow this flow:
+The implementation flow is:
 
 ```text
 Read .pair state
@@ -41,26 +41,24 @@ Build DashboardSnapshot
 Render static HTML
         |
         v
-Write dashboard assets
+Write assets
 ```
 
-The renderer implementation lives under:
+The implementation belongs to:
 
 ```text
 scripts/dashboard/
 ```
 
-The generated artifacts live under:
+Generated files belong to:
 
 ```text
 .pair/dashboard/
 ```
 
-Never create a top-level `dashboard/` directory.
+Never create a top-level `dashboard/` source directory.
 
 ## Output contract
-
-Default output:
 
 ```text
 .pair/dashboard/
@@ -71,19 +69,19 @@ Default output:
     └── app.js
 ```
 
-The generated dashboard must open directly in a browser without a build step.
+The output must open directly in a browser without npm, bundlers, or a build step.
 
-## HTML generation requirements
+## HTML requirements
 
-The generated page must:
+Generated dashboard HTML must:
 
-- be a static HTML application;
-- avoid npm/build dependencies;
-- use local assets only;
-- remain readable on desktop and mobile;
-- preserve the relationship between Pair state and rendered information.
+- be a static page;
+- use local assets;
+- avoid external runtime dependencies;
+- work on desktop and mobile;
+- represent Pair state without becoming another state source.
 
-Expected structure:
+Example structure:
 
 ```html
 <!doctype html>
@@ -98,40 +96,40 @@ Expected structure:
 </html>
 ```
 
-## Required dashboard sections
+## Required sections
 
 ### Session
 
-Display:
+Show:
 
-- project name;
-- current phase;
-- current status;
-- last update time.
+- project;
+- phase;
+- status;
+- updated time.
 
 ### Progress
 
-Display:
+Show:
 
 - total steps;
 - completed steps;
 - current step;
-- step status.
+- step state.
 
 ### Plan
 
-Visualize the implementation plan:
+Visualize:
 
-- completed steps;
-- active step;
-- pending steps;
+- completed;
+- active;
+- pending;
 - blocked steps.
 
 ### Timeline
 
-Read historical events from sessions/history data.
+Use session history data.
 
-Display:
+Show:
 
 - timestamp;
 - event;
@@ -142,26 +140,21 @@ Display:
 
 Read `pitfalls.yaml`.
 
-Display:
+Show:
 
-- pitfall title;
+- title;
 - severity;
 - affected scope;
 - resolution.
 
-## Supported options
+## Options
 
-- JSON export only;
+Supported implementations may provide:
+
+- JSON-only export;
 - custom `.pair` directory;
 - custom output directory.
 
 ## Future extensions
 
-Enhancements may add:
-
-- watch mode;
-- multi-project overview;
-- ownership metrics;
-- richer graphs.
-
-These must remain views over Pair state and must not introduce another source of truth.
+Watch mode, ownership metrics, graphs, and workspace dashboards must remain views over Pair state and must not introduce another source of truth.
