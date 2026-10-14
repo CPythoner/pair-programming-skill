@@ -25,6 +25,28 @@ Read existing Pair state only:
 
 Do not initialize or rewrite `.pair` state only for dashboard generation.
 
+Read canonical YAML first; legacy JSON snapshots may be used only when the corresponding
+YAML file is absent. Use manifest steps for the reference plan and progress steps for
+actual completion. Read Markdown session summaries from `sessions/`; label file-mtime
+timestamps as such. Missing state must remain visible, and unsupported schema versions
+or malformed structured state must report a generation error.
+
+## Runtime entrypoint
+
+Normalize `$pair-programming dashboard` and `/pair-programming dashboard` to
+`/pair dashboard`. Resolve the generator from the loaded skill directory, then execute
+from the user's project root:
+
+```bash
+python3 /absolute/path/to/pair-programming/scripts/dashboard/main.py
+```
+
+Use Python 3.10+ and the YAML dependency declared in
+`scripts/dashboard/requirements.txt`. For setup and CLI examples, read
+`scripts/dashboard/README.md`. Report the generated artifact paths and allow the HTML
+to be opened directly. Generation is available while design approval or recovery is
+pending because it writes only dashboard projections.
+
 ## Generation contract
 
 The implementation flow is:

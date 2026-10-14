@@ -184,6 +184,31 @@ Also report:
 - pitfall entries that have not yet been surfaced to the user;
 - Guide quality warnings/failures when reconstruction depends on the Guide.
 
+## `/pair dashboard [--json] [--pair-dir <path>] [--output <path>]`
+
+Read `reference/dashboard.md` and `reference/state-model.md`.
+
+Generate a static, read-only view of existing Pair state. This command is available even
+while design approval is pending or workflow recovery needs attention. It does not run
+recovery mutations, initialize state, create branches, or modify Human source.
+
+Resolve `scripts/dashboard/main.py` relative to the loaded skill's directory, then run it
+from the user's project root so the default `.pair` points to that project:
+
+```bash
+python3 /absolute/path/to/pair-programming/scripts/dashboard/main.py
+```
+
+Forward only the supported `--json`, `--pair-dir`, and `--output` options. Relative option
+paths resolve from the user's project root. If YAML support is unavailable, report the
+dependency instructions in `scripts/dashboard/README.md`; do not silently create empty
+state or claim successful generation.
+
+Output:
+- paths to generated `index.html` and `data.json` (only `data.json` for `--json`);
+- how to open the static HTML directly in a browser;
+- any generation failure or missing-state limitation.
+
 ## `/pair rebase-plan`
 
 This is workflow replanning, not `git rebase`.

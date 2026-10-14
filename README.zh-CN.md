@@ -789,6 +789,22 @@ Step 4 — locking boundary
 
 ---
 
+### `/pair dashboard`
+
+从现有 `.pair` 状态生成静态看板，展示会话、进度、计划、时间线和 Pitfalls。
+直接用浏览器打开 `.pair/dashboard/index.html`。该命令只写入看板产物，不修改实现代码、
+Git 引用或工作流状态；等待设计批准时也可以使用。
+
+```text
+$pair-programming dashboard
+/pair-programming dashboard --json
+/pair dashboard --pair-dir ./project/.pair --output ./dashboard-output
+```
+
+安装包包含 Python 生成器。读取正式 YAML 状态需要 Python 3.10+ 和 PyYAML。
+详见 [dashboard 安装与用法](scripts/dashboard/README.md) 和
+[dashboard 生成契约](reference/dashboard.md)。
+
 ### `/pair rebase-plan`
 
 这里的 rebase 不是 Git rebase。
@@ -1099,12 +1115,14 @@ pair-programming-skill/
 │
 ├── scripts/
 │   ├── check-guide.py
+│   ├── dashboard/
 │   ├── install.sh
 │   ├── install.ps1
 │   └── validate-package.py
 │
 ├── reference/
 │   ├── command-protocol.md
+│   ├── dashboard.md
 │   ├── decomposition.md
 │   ├── design-gate.md
 │   ├── guide-quality.md

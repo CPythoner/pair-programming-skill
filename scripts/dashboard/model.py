@@ -20,6 +20,7 @@ class DashboardEvent:
     event: str
     actor: str | None = None
     details: dict[str, Any] = field(default_factory=dict)
+    step: str | None = None
 
 
 @dataclass
@@ -28,6 +29,9 @@ class PitfallItem:
     id: str
     title: str
     description: str | None = None
+    severity: str | None = None
+    affected_scope: list[str] = field(default_factory=list)
+    resolution: str | None = None
 
 
 @dataclass
@@ -42,6 +46,9 @@ class DashboardSnapshot:
     events: list[DashboardEvent] = field(default_factory=list)
     pitfalls: list[PitfallItem] = field(default_factory=list)
     generated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    phase: str = "unknown"
+    updated_at: str | None = None
+    warnings: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

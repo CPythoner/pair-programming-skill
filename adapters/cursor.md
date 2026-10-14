@@ -43,6 +43,7 @@ explicitly as a slash skill:
 /pair-programming hint step 2
 /pair-programming take tests
 /pair-programming status
+/pair-programming dashboard
 ```
 
 The workflow keeps automatic invocation enabled; it does not set

@@ -47,6 +47,7 @@ kebab-case `name`.
 /pair-programming hint step 2
 /pair-programming take tests
 /pair-programming status
+/pair-programming dashboard
 ```
 
 OpenCode can also load it automatically through the native skill tool when its description

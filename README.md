@@ -790,6 +790,22 @@ Step 4 — locking boundary
 
 ---
 
+### `/pair dashboard`
+
+Generate a static view of existing `.pair` state: session, progress, plan, timeline, and
+pitfalls. Open `.pair/dashboard/index.html` directly in a browser. The command does not
+modify implementation code, Git refs, or workflow state and works while approval is pending.
+
+```text
+$pair-programming dashboard
+/pair-programming dashboard --json
+/pair dashboard --pair-dir ./project/.pair --output ./dashboard-output
+```
+
+The installed skill includes the Python generator. Python 3.10+ and PyYAML are required
+to read canonical YAML state. See [dashboard setup and usage](scripts/dashboard/README.md)
+and the [dashboard contract](reference/dashboard.md).
+
 ### `/pair rebase-plan`
 
 This is **not** Git rebase.
@@ -1105,12 +1121,14 @@ pair-programming-skill/
 │
 ├── scripts/
 │   ├── check-guide.py
+│   ├── dashboard/
 │   ├── install.sh
 │   ├── install.ps1
 │   └── validate-package.py
 │
 ├── reference/
 │   ├── command-protocol.md
+│   ├── dashboard.md
 │   ├── decomposition.md
 │   ├── design-gate.md
 │   ├── guide-quality.md

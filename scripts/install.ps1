@@ -61,6 +61,11 @@ try {
     Copy-Item -Recurse (Join-Path $SourceRoot "schemas") (Join-Path $Tmp "schemas")
     New-Item -ItemType Directory -Force -Path (Join-Path $Tmp "scripts") | Out-Null
     Copy-Item (Join-Path $SourceRoot "scripts/check-guide.py") (Join-Path $Tmp "scripts/check-guide.py")
+    $DashboardDest = Join-Path $Tmp "scripts/dashboard"
+    New-Item -ItemType Directory -Force -Path $DashboardDest | Out-Null
+    Copy-Item (Join-Path $SourceRoot "scripts/dashboard/*.py") $DashboardDest
+    Copy-Item (Join-Path $SourceRoot "scripts/dashboard/README.md") $DashboardDest
+    Copy-Item (Join-Path $SourceRoot "scripts/dashboard/requirements.txt") $DashboardDest
     New-Item -ItemType Directory -Force -Path $Parent | Out-Null
     Move-Item $Tmp $Dest
 }

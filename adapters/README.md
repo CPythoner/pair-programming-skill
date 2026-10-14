@@ -20,6 +20,9 @@ SKILL.md
 reference/
 templates/
 examples/
+schemas/
+scripts/check-guide.py
+scripts/dashboard/
 ```
 
 ## Portable-first strategy
@@ -59,6 +62,7 @@ The workflow's internal semantic protocol is always:
 /pair take
 /pair challenge
 /pair status
+/pair dashboard
 /pair rebase-plan
 ```
 

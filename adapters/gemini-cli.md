@@ -38,6 +38,7 @@ Gemini, use natural language such as:
 
 ```text
 Use the pair-programming skill. Run the semantic command: /pair plan add capability registry
+Use the pair-programming skill. Run the semantic command: /pair dashboard
 ```
 
 Useful Gemini management commands:

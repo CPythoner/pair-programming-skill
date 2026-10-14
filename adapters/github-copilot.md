@@ -36,6 +36,7 @@ explicitly, mention the slash-prefixed skill name in the prompt, for example:
 ```text
 Use the /pair-programming skill to run: /pair plan add capability registry
 Use the /pair-programming skill to run: /pair review
+Use the /pair-programming skill to run: /pair dashboard
 ```
 
 In Copilot CLI, use `/skills list` and `/skills info pair-programming` to inspect the

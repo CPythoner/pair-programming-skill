@@ -15,6 +15,7 @@ Commands covered:
 /pair take
 /pair challenge
 /pair status
+/pair dashboard
 /pair rebase-plan
 ```
 
@@ -624,6 +625,25 @@ Feature complete.
 
 ---
 
+## 16. Open a read-only dashboard — `/pair dashboard`
+
+User:
+
+```text
+/pair dashboard
+```
+
+Agent runs the packaged generator from the Human project root and reports:
+
+```text
+Generated .pair/dashboard/index.html and .pair/dashboard/data.json.
+Open index.html directly in your browser to inspect session, progress, plan,
+timeline, and pitfalls. Only dashboard artifacts were written.
+```
+
+`/pair dashboard --json` exports only `data.json`. The command is also available before
+design approval and does not initialize missing Pair state or perform recovery mutations.
+
 ## Command coverage
 
 This example used every current command:
@@ -639,6 +659,7 @@ This example used every current command:
 | `/pair take` | Delegate tests to AI |
 | `/pair challenge` | Check architectural understanding |
 | `/pair status` | Inspect workflow, ownership, and Pitfall state |
+| `/pair dashboard` | Generate a static view without modifying Pair workflow state |
 | `/pair rebase-plan` | Rebuild remaining plan after Human design divergence |
 
 The example intentionally demonstrates the intended balance:
