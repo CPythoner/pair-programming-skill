@@ -117,7 +117,7 @@ Canonical semantic protocol:
 /pair take <scope>
 /pair challenge [scope]
 /pair status
-/pair dashboard [--json] [--pair-dir <path>] [--output <path>]
+/pair dashboard [--watch] [--interval <seconds>] [--json] [--pair-dir <path> | --workspace <path>] [--output <path>]
 /pair rebase-plan
 ```
 
@@ -189,6 +189,12 @@ the next write. Stop on a newer unsupported schema version.
 Initialize missing state from `templates/` only when needed. Do not rewrite unrelated state
 just to normalize formatting.
 
+When recording a session, use `templates/session-summary.md` frontmatter and
+`schemas/session.schema.json`. Create one stable session ID and actual timezone-aware
+start time, then update that same record with the actual end time and session outcome.
+Session completion does not imply feature completion. Keep unknown metadata unknown;
+dashboard/history exports never replace the source session record.
+
 ## Shadow layout
 
 Resolve Git paths instead of assuming `.git` is a directory:
@@ -248,7 +254,7 @@ Always read `reference/command-protocol.md` for explicit commands.
 | `/pair take` | Yes | `takeover.md`, `recovery.md`, `pitfall-journal.md`, `state-model.md` | Run transactional takeover; validate; return control. |
 | `/pair challenge` | No | — | Ask 1–3 maintainability-critical questions; no trivia or arbitrary score. |
 | `/pair status` | No | `state-model.md`, `recovery.md`, `pitfall-journal.md` | Compare metadata with real Git state and report current truth. |
-| `/pair dashboard` | No | `dashboard.md`, `state-model.md` | Generate a read-only view of existing Pair state using the packaged Python entrypoint; report artifact paths. |
+| `/pair dashboard` | No | `dashboard.md`, `state-model.md` | Generate a read-only view using the packaged Python entrypoint; optionally poll with `--watch`; report artifact paths and the running terminal session. |
 | `/pair rebase-plan` | No by default | `recovery.md`, `design-gate.md`, `decomposition.md`, `guide-quality.md`, `state-model.md` | Replan remaining work from authoritative Human code; this is not `git rebase`. |
 
 ## Plan → Shadow → Guide

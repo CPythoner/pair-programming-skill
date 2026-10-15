@@ -184,7 +184,7 @@ Also report:
 - pitfall entries that have not yet been surfaced to the user;
 - Guide quality warnings/failures when reconstruction depends on the Guide.
 
-## `/pair dashboard [--json] [--pair-dir <path>] [--output <path>]`
+## `/pair dashboard [--watch] [--interval <seconds>] [--json] [--pair-dir <path> | --workspace <path>] [--output <path>]`
 
 Read `reference/dashboard.md` and `reference/state-model.md`.
 
@@ -199,10 +199,26 @@ from the user's project root so the default `.pair` points to that project:
 python3 /absolute/path/to/pair-programming/scripts/dashboard/main.py
 ```
 
-Forward only the supported `--json`, `--pair-dir`, and `--output` options. Relative option
+Forward only the supported `--watch`, `--interval`, `--json`, `--pair-dir`, `--workspace`, and `--output` options. Relative option
 paths resolve from the user's project root. If YAML support is unavailable, report the
 dependency instructions in `scripts/dashboard/README.md`; do not silently create empty
 state or claim successful generation.
+
+With `--watch`, generate once and keep polling in a terminal session; do not block the
+conversation waiting for the process to finish. Report the session and how to stop it
+with Ctrl-C. `--interval` is a positive, finite number of seconds (default: 1).
+Changes regenerate static files and report step transitions; the browser displays the
+new state after a page reload. Malformed state during watching leaves the last valid
+business values in place and is retried without rewriting Pair state. Freshness metadata
+and a stale warning may change while those values remain intact.
+
+`--workspace` and `--pair-dir` are mutually exclusive. Workspace mode scans only direct
+child project directories, isolates per-project read errors, and defaults to
+`<workspace>/.pair/dashboard`. It supports Watch and JSON-only exports.
+Report per-project progress; never invent an aggregate completion percentage.
+
+JSON-only mode includes `data.json` and derived `history/*.json`; it does not create HTML
+or assets. Suggested `/pair` commands are text for the user, never an execution API.
 
 Output:
 - paths to generated `index.html` and `data.json` (only `data.json` for `--json`);

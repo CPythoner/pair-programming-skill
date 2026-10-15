@@ -117,6 +117,18 @@ A checkpoint is not an alternate workspace and is never auto-restored.
 
 Cross-session summaries. They support recovery but never override actual Git state.
 
+New session summaries use the YAML frontmatter in `templates/session-summary.md` and
+`schemas/session.schema.json`. At session start, the Pair workflow records a stable ID,
+title, feature slug, actual timezone-aware start time, and `active` status. At session end,
+it records the actual end time and `completed` or `abandoned` outcome. A completed session
+does not mean the feature is complete. Preserve the ID across edits; distinguish multiple
+sessions on the same day. Unknown times remain null. Dashboard generation never fills
+these fields on behalf of the workflow.
+
+Equivalent `.yaml` and `.json` session metadata are readable. Legacy Markdown remains
+readable with unknown outcome/start/end, and file modification time is labeled separately.
+The dashboard's `history/` files are rebuildable exports of these source records.
+
 ## State consistency
 
 Before a new Pair operation, especially any mutating operation:

@@ -36,6 +36,7 @@ REQUIRED_FILES = [
     "schemas/progress.schema.json",
     "schemas/pitfalls.schema.json",
     "schemas/takeover-operation.schema.json",
+    "schemas/session.schema.json",
     "examples/example-session.md",
     "adapters/README.md",
     "adapters/codex.md",
@@ -53,6 +54,11 @@ REQUIRED_FILES = [
     "scripts/dashboard/collector.py",
     "scripts/dashboard/renderer.py",
     "scripts/dashboard/export.py",
+    "scripts/dashboard/watch.py",
+    "scripts/dashboard/state.py",
+    "scripts/dashboard/sessions.py",
+    "scripts/dashboard/insights.py",
+    "scripts/dashboard/workspace.py",
     "scripts/dashboard/README.md",
     "scripts/dashboard/requirements.txt",
 ]
@@ -63,6 +69,7 @@ COMMANDS = [
 ]
 
 SCHEMA_FILES = [
+    "schemas/session.schema.json",
     "schemas/config.schema.json",
     "schemas/manifest.schema.json",
     "schemas/progress.schema.json",
@@ -71,6 +78,7 @@ SCHEMA_FILES = [
 ]
 
 VERSIONED_TEMPLATES = [
+    "templates/session-summary.md",
     "templates/config.yaml",
     "templates/manifest.yaml",
     "templates/progress.yaml",

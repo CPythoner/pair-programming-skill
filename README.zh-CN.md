@@ -798,12 +798,24 @@ Git 引用或工作流状态；等待设计批准时也可以使用。
 ```text
 $pair-programming dashboard
 /pair-programming dashboard --json
+/pair dashboard --watch
+/pair dashboard --workspace ~/workspace
 /pair dashboard --pair-dir ./project/.pair --output ./dashboard-output
 ```
 
 安装包包含 Python 生成器。读取正式 YAML 状态需要 Python 3.10+ 和 PyYAML。
 详见 [dashboard 安装与用法](scripts/dashboard/README.md) 和
 [dashboard 生成契约](reference/dashboard.md)。
+
+`--watch` 首次生成后默认每秒轮询一次状态变化，自动重新生成产物并报告步骤变化。
+用 `--interval <seconds>` 调整轮询间隔，按 Ctrl-C 停止。已打开的 HTML 刷新后显示
+新状态；读取到半写入或无效状态时保留上一份有效产物并继续重试。
+
+控制中心还展示步骤依赖与可开始状态、建议的下一条命令、记录的验证结果和知识覆盖、
+实现来源及可重建的会话历史。来源比例以已完成步骤为分母，保留 mixed/unknown；
+步骤完成比例排除 skipped/superseded，进度来源缺失时保持未知。
+Workspace 只扫描直接子项目，每个项目有详情页，读取错误单独展示；支持组合 `--watch`。
+会话时间和结果只取明确的源记录，旧 Markdown 不推测真实时间或结果。
 
 ### `/pair rebase-plan`
 
@@ -1137,6 +1149,7 @@ pair-programming-skill/
 │   ├── manifest.schema.json
 │   ├── pitfalls.schema.json
 │   ├── progress.schema.json
+│   ├── session.schema.json
 │   └── takeover-operation.schema.json
 │
 └── templates/

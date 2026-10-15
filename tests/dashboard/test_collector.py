@@ -40,7 +40,8 @@ def test_missing_pair_files_are_supported(tmp_path):
     assert snapshot.status == "unknown"
     assert snapshot.plan == []
     assert snapshot.updated_at is None
-    assert len(snapshot.warnings) == 3
+    assert sum(warning.startswith("Missing ") for warning in snapshot.warnings) == 3
+    assert snapshot.progress_known is False
     assert not (tmp_path / ".pair").exists()
 
 

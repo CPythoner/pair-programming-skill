@@ -799,12 +799,26 @@ modify implementation code, Git refs, or workflow state and works while approval
 ```text
 $pair-programming dashboard
 /pair-programming dashboard --json
+/pair dashboard --watch
+/pair dashboard --workspace ~/workspace
 /pair dashboard --pair-dir ./project/.pair --output ./dashboard-output
 ```
 
 The installed skill includes the Python generator. Python 3.10+ and PyYAML are required
 to read canonical YAML state. See [dashboard setup and usage](scripts/dashboard/README.md)
 and the [dashboard contract](reference/dashboard.md).
+
+`--watch` generates once, then polls state changes every second and reports step
+transitions. Use `--interval <seconds>` to adjust polling and Ctrl-C to stop. Reload
+the open HTML to display regenerated state; invalid intermediate input is retried
+without replacing the last valid dashboard.
+
+The control center also displays dependency/readiness information, suggested next commands,
+recorded validation and knowledge coverage, implementation origin, and rebuildable session
+history. Origin percentages use completed steps as the denominator and retain mixed/unknown.
+Step completion excludes skipped/superseded entries; unavailable progress stays unknown.
+The workspace option lists direct child projects, with individual detail pages and read-error
+isolation. It also supports `--watch`; reload the static page after regeneration.
 
 ### `/pair rebase-plan`
 
@@ -1143,6 +1157,7 @@ pair-programming-skill/
 │   ├── manifest.schema.json
 │   ├── pitfalls.schema.json
 │   ├── progress.schema.json
+│   ├── session.schema.json
 │   └── takeover-operation.schema.json
 │
 └── templates/
