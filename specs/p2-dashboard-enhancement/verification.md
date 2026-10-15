@@ -2,6 +2,9 @@
 
 日期：2026-10-15。范围：P2-01 至 P2-06，统一进入 PR #7。
 
+代码已提交并推送到 `codex/p2-dashboard-enhancement`，统一评审入口：
+[PR #7](https://github.com/CPythoner/pair-programming-skill/pull/7)。
+
 ## 自动化检查
 
 - `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -p no:cacheprovider`：77 项通过。
