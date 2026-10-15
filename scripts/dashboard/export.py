@@ -55,8 +55,22 @@ def _export_history(snapshot: DashboardSnapshot, output: Path) -> None:
 def export_dashboard(snapshot: DashboardSnapshot | WorkspaceSnapshot, output: Path, json_only: bool = False) -> None:
     if isinstance(snapshot, WorkspaceSnapshot):
         for project in snapshot.projects:
+            project_output = output / project.artifact_dir
             if project.snapshot is not None:
-                export_dashboard(project.snapshot, output / project.artifact_dir, json_only)
+                export_dashboard(project.snapshot, project_output, json_only)
+            elif project.error:
+                # Replace a previous detail page too; an open page must not keep
+                # presenting old counts as fresh after its overview reports failure.
+                unavailable = DashboardSnapshot(
+                    project=project.name, status="attention_required", progress_known=False,
+                    generated_at=snapshot.generated_at, workspace_link="../../index.html",
+                    freshness={**snapshot.freshness, "state": "unavailable", "error": project.error},
+                    actions=[{"kind": "source", "title": "Resolve source read error", "detail": "Progress cannot be verified until source records are readable.", "command": "/pair status"}],
+                )
+                # Failure does not prove that previously exported sessions were removed.
+                export_json(unavailable, project_output / "data.json")
+                if not json_only:
+                    export_html(unavailable, project_output / "index.html")
         export_json(snapshot, output / "data.json")
         if not json_only:
             render_workspace(snapshot, output / "index.html")

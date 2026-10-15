@@ -63,8 +63,14 @@ def _time(value: str | None) -> str:
     return f'<time datetime="{_escape(value)}">{_escape(value)}</time>'
 
 
+def _step_identity(number: int, item) -> str:
+    return f"Step {number} · ID: {item.id}"
+
+
 def _freshness(snapshot) -> str:
     info = snapshot.freshness
+    if info.get("state") == "unavailable":
+        return f'<aside class="notice"><h2>Source unavailable · progress unknown</h2><p>{_escape(info.get("error"))}</p><p>No verified snapshot is available in this run.</p></aside>'
     if info.get("state") == "stale":
         return f'<aside class="notice stale-notice"><h2>Showing last valid state · stale</h2><p>{_escape(info.get("error"))}</p><p>Last successful generation: {_time(snapshot.generated_at)}. Watch continues retrying.</p></aside>'
     if info.get("mode") == "watch":
@@ -99,15 +105,22 @@ def _graph(snapshot: DashboardSnapshot) -> str:
         content.append(f'<path class="graph-edge" d="M{x1 + 196} {y1 + 27} C{x1 + 220} {y1 + 27} {x2 - 24} {y2 + 27} {x2} {y2 + 27}" marker-end="url(#dependency-arrow)"/>')
     for name, (x, y) in positions.items():
         step = nodes[name]
-        kind, _, _ = _state(step.status)
+        kind, state_label, _ = _state(step.status)
+        is_current = step.id == snapshot.current_step
+        current_attribute = ' aria-current="step"' if is_current else ""
+        identity = _step_identity(indices[name], step)
+        accessible_label = f"{identity} · {step.title} · {state_label} · Readiness: {step.readiness}"
+        if is_current:
+            accessible_label += " · Current step"
+        state_label = f"Current · {state_label}" if is_current else state_label
         title, units = "", 0
-        for character in step.title:
+        for character in f"{indices[name]}. {step.title}":
             units += 2 if unicodedata.east_asian_width(character) in {"W", "F"} else 1
             if units > 23:
                 title += "…"
                 break
             title += character
-        content.append(f'<a href="#step-{indices[name]}" aria-label="{_escape(step.title)}"><g class="graph-node graph-{kind}"><title>{_escape(step.title)}</title><rect x="{x}" y="{y}" width="196" height="54" rx="7"/><text x="{x + 12}" y="{y + 23}">{_escape(title)}</text><text class="graph-state" x="{x + 12}" y="{y + 41}">{_escape(step.readiness)}</text></g></a>')
+        content.append(f'<a href="#step-{indices[name]}" aria-label="{_escape(accessible_label)}"{current_attribute}><g class="graph-node graph-{kind}{" graph-current" if is_current else ""}"><title>{_escape(accessible_label)}</title><rect x="{x}" y="{y}" width="196" height="54" rx="7"/><text x="{x + 12}" y="{y + 23}">{_escape(title)}</text><text class="graph-state" x="{x + 12}" y="{y + 41}">{_escape(state_label)}</text></g></a>')
     caption = "Arrows show recorded dependencies. Select a node to inspect its step." if snapshot.graph.get("edges") else "No dependencies recorded; these steps have no recorded ordering constraints."
     return f'<div class="dependency-graph"><p class="muted">{caption}</p><div class="graph-scroll" tabindex="0" role="region" aria-label="Step dependency graph"><svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg">{"".join(content)}</svg></div></div>'
 
@@ -151,10 +164,13 @@ def _render_html(snapshot: DashboardSnapshot) -> str:
         f'<progress class="progress-bar" value="{percent}" max="100" aria-label="{progress_label}"></progress>'
         if percent is not None else '<div class="progress-bar" aria-hidden="true"></div>'
     )
-    progress_summary = (f"{snapshot.completed_steps} of {total} active plan steps completed" if total > 0 else "No active implementation steps recorded.") if snapshot.progress_known else "Progress state unavailable; completion is unknown."
-    current = next((item for item in snapshot.plan if item.id == snapshot.current_step), None)
+    progress_summary = (f"{snapshot.completed_steps} of {total} steps completed" if total > 0 else "No active implementation steps recorded.") if snapshot.progress_known else "Progress state unavailable; completion is unknown."
+    current_position, current = next(((number, item) for number, item in enumerate(snapshot.plan, 1) if item.id == snapshot.current_step), (None, None))
     current_title = _escape(current.title if current else snapshot.current_step or "No current step")
     current_badge = _badge(current.status) if current else '<span class="muted">No step state recorded</span>'
+    current_identity = f'<span class="step-id">{_escape(_step_identity(current_position, current))}</span>' if current else ""
+    excluded = len(snapshot.plan) - total
+    plan_count = f"{len(snapshot.plan)} steps" + (f" · {excluded} excluded" if excluded else "")
     plan_rows = []
     for number, item in enumerate(snapshot.plan, 1):
         kind, _, marker = _state(item.status)
@@ -165,7 +181,7 @@ def _render_html(snapshot: DashboardSnapshot) -> str:
         plan_rows.append(f'''<li id="step-{number}" class="step step-{kind}{' step-current' if is_current else ''}"{current_attribute}>
           <span class="step-marker" aria-hidden="true">{marker}</span>
           <div class="step-copy"><div class="step-heading"><strong>{_escape(item.title)}</strong>{current_label}</div>
-            <span class="step-id">{number:02d} / {_escape(item.id)}</span>{dependencies}</div>
+            <span class="step-id">{_escape(_step_identity(number, item))}</span>{dependencies}</div>
           {_badge(item.status)}
         </li>''')
     plan = '<ol class="step-list">' + "".join(plan_rows) + "</ol>" if plan_rows else (
@@ -175,7 +191,7 @@ def _render_html(snapshot: DashboardSnapshot) -> str:
     events = "".join(
         f'<li class="event"><span class="event-dot" aria-hidden="true"></span>'
         f'<div><div class="event-time">{_time(item.time)}</div><strong>{_escape(item.event)}</strong>'
-        f'<p class="event-meta">Actor: {_escape(item.actor)} · Step: {_escape(item.step)}</p>'
+        f'<p class="event-meta">Actor: {_escape(item.actor)} · Recorded step: {_escape(item.step)}</p>'
         f"""{'<p class="event-meta">Time from file modification</p>' if item.details.get('time_source') == 'file_mtime' else ''}"""
         '</div></li>'
         for item in snapshot.events
@@ -251,11 +267,12 @@ def _render_html(snapshot: DashboardSnapshot) -> str:
       <div class="panel-heading"><h2 id="progress-title">Step completion</h2><span class="eyebrow">Steps only</span></div>
       <div class="progress-summary"><span class="completion">{completion}</span><span class="muted">{progress_summary}</span></div>
       {progress_meter}
-      <div class="current-step"><div><span class="eyebrow">Current step</span><strong>{current_title}</strong></div>{current_badge}</div>
+      <div class="current-step"><div><span class="eyebrow">Current step</span><strong>{current_title}</strong>{current_identity}</div>{current_badge}</div>
     </section>
   </div>
   <section id="plan" class="panel plan-panel" aria-labelledby="plan-title">
-    <div class="panel-heading"><h2 id="plan-title">Plan timeline</h2><span class="section-count">{len(snapshot.plan)} steps</span></div>
+    <div class="panel-heading"><h2 id="plan-title">Plan timeline</h2><span class="section-count">{plan_count}</span></div>
+    <p class="metric-note plan-note">Step numbers show plan order; IDs identify source records. Skipped and superseded steps are excluded from completion.</p>
     {_graph(snapshot)}
     {plan}
   </section>
@@ -375,6 +392,7 @@ dt, .muted { color: var(--muted); } dd { margin: 0; }
 .progress-bar::-moz-progress-bar { background: var(--accent); border-radius: 4px; }
 .current-step { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .current-step strong { display: block; margin-top: 4px; font-size: 14px; font-weight: 550; }
+.current-step .step-id { display: block; margin-top: 4px; }
 .current-step .muted { font-size: 13px; }
 .plan-panel { margin: 20px 0; }
 .step-list, .event-list, .pitfall-list { list-style: none; padding: 0; }
@@ -422,6 +440,8 @@ dt, .muted { color: var(--muted); } dd { margin: 0; }
 .graph-node rect { fill: var(--panel-soft); stroke: var(--border); }.graph-node text { font: 13px "Segoe UI", sans-serif; fill: var(--fg); }
 .graph-node .graph-state { font-size: 11px; fill: var(--muted); }.graph-done rect { stroke: var(--accent); }.graph-active rect { fill: var(--accent-soft); stroke: var(--accent); }
 .graph-node:hover rect { stroke: var(--accent); }.metrics-grid { margin-bottom: 20px; }
+.graph-node.graph-current rect { stroke: var(--accent); stroke-width: 2; }
+.metric-note.plan-note { margin: -12px 0 20px; }
 .origin-row { display: grid; grid-template-columns: 62px minmax(0, 1fr) 78px; gap: 12px; align-items: center; margin: 16px 0; font-size: 13px; }
 .origin-row > span:last-child { text-align: right; font-variant-numeric: tabular-nums; }.origin-track { height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
 .origin-fill { display: block; height: 100%; background: var(--accent); }.origin-ai { background: var(--muted); }.origin-mixed { background: repeating-linear-gradient(45deg, var(--accent), var(--accent) 3px, var(--panel) 3px, var(--panel) 6px); }.origin-unknown { background: var(--muted); opacity: .45; }

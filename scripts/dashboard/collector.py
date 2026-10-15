@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .model import DashboardEvent, DashboardSnapshot, PitfallItem, PlanItem
-from .insights import analyze_plan, implementation_origin, validation_summary, workflow_actions
+from .insights import COMPLETED, analyze_plan, implementation_origin, step_consistency, validation_summary, workflow_actions
 from .sessions import collect_sessions
 from .state import load_mapping
 
@@ -28,6 +28,12 @@ def _items(value: object) -> list[dict]:
 
 def _strings(value: object) -> list[str]:
     return [str(item) for item in value] if isinstance(value, list) else []
+
+
+def _step_id(value: object, field: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise ValueError(f'Invalid {field}: expected a non-empty string step ID; quote numeric IDs such as "01" in YAML')
+    return value
 
 
 def _modified_time(path: Path) -> str:
@@ -102,14 +108,21 @@ def collect_dashboard(pair_dir: Path) -> DashboardSnapshot:
     progress_known = isinstance(progress.get("steps"), dict) or isinstance(progress.get("plan"), list)
     if any(not isinstance(value, dict) for value in states.values()):
         raise ValueError("Invalid progress.steps: each step must be a mapping")
+    for step_id in states:
+        _step_id(step_id, "progress.steps key")
+    current_step = progress.get("current_step") or None
+    if progress.get("current_step") not in (None, ""):
+        current_step = _step_id(progress["current_step"], "progress.current_step")
     reference_steps = manifest.get("steps", progress.get("plan", []))
+    if not isinstance(reference_steps, list) or any(not isinstance(item, dict) for item in reference_steps):
+        raise ValueError("Invalid plan: expected a list of step mappings")
     plan = []
     invalid_dependencies = []
-    for n, item in enumerate(_items(reference_steps)):
-        step_id = str(item.get("id", n + 1))
+    for n, item in enumerate(reference_steps):
+        step_id = _step_id(item.get("id") if "steps" in manifest else item.get("id", str(n + 1)), f"plan step {n + 1} ID")
         # A Guide step in manifest does not prove Human completion.
         state = _mapping(states.get(step_id))
-        status = state.get("status", "pending" if progress_known else "unknown") if "steps" in manifest else item.get("status", "pending")
+        status = state.get("status", "pending" if progress_known else "unknown") if "steps" in progress or "steps" in manifest else item.get("status", "pending")
         origin = state.get("origin", "unknown")
         dependencies = item.get("dependencies", [])
         if not isinstance(dependencies, list) or any(not isinstance(value, str) for value in dependencies):
@@ -127,6 +140,7 @@ def collect_dashboard(pair_dir: Path) -> DashboardSnapshot:
                 step.readiness = "unknown"
     validation = validation_summary(manifest, progress)
     actions = workflow_actions(manifest, progress, plan, graph, validation, operations)
+    warnings.extend(step_consistency(plan, progress))
     if any("operations/" in warning for warning in warnings):
         actions.insert(0, {"kind": "recovery", "title": "Inspect unreadable takeover journals", "detail": "Operation state is incomplete; inspect the source warnings.", "command": "/pair status"})
     pitfall_items = [
@@ -162,9 +176,9 @@ def collect_dashboard(pair_dir: Path) -> DashboardSnapshot:
     return DashboardSnapshot(
         project=str(_mapping(manifest.get("repository")).get("name") or manifest.get("project") or pair_dir.resolve().parent.name),
         status=str(status),
-        current_step=progress.get("current_step"),
+        current_step=current_step,
         total_steps=sum(step.status not in {"skipped", "superseded"} for step in plan),
-        completed_steps=sum(1 for item in plan if item.status in {"done", "completed"}),
+        completed_steps=sum(1 for item in plan if item.status in COMPLETED),
         plan=plan,
         events=events,
         pitfalls=pitfall_items,

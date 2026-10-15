@@ -35,3 +35,22 @@
 Dashboard 为只读静态产物，Watch 更新文件后仍需手动刷新浏览器；建议命令仅供复制。
 PowerShell 安装脚本通过包静态检查，未在 Windows 实际执行。
 合并与发布不在本次操作范围内；代码通过同一个 PR 供审阅。
+
+## Step 同步复核（2026-10-15）
+
+- 修复旧 `progress.plan` 与 `progress.steps` 并存时误读旧状态的问题；兼容完成状态的
+  `completed / done / complete`，计数、依赖 readiness 与来源分母使用同一规则。
+- 数字样式的字符串 ID 保持原值；错误的数字 YAML ID 明确报错，避免静默丢失完成状态。
+  缺失的正式 manifest ID 不再用列表位置冒充。编号改为 `Step 1 · ID: 01`。
+- 当前步骤卡片、竖向列表、图节点使用同一编号、ID、状态和 current 标记；明确列出
+  skipped/superseded 的排除数量。历史事件标为 Recorded step，保留事件当时的 ID。
+- 对不存在的 current、与 current 冲突的在进行步骤，以及 complete 阶段仍有未完成步骤，
+  显示对账提示；不通过改写源状态掩盖矛盾。
+- 修复 workspace 源文件失败时详情页仍显示旧 fresh 数据的问题。有上次有效快照时标为
+  stale；否则输出 unavailable/未知。正常项目继续更新，源恢复后清除错误。
+- 全量测试 **93 项通过**；包校验和 diff 检查通过。新增回归覆盖多位置一致性、重排 ID、
+  状态切换、来源冲突、错误输入及 workspace 失败/恢复。
+- 使用明确标为 DEMO 的 5 行计划（3 个计数步骤、1 skipped、1 superseded）实际运行
+  workspace Watch。浏览器确认 `0% → 33% → 67% → 100%`、review 不提前计完成、
+  完成后清除 current、历史 ID 不变，以及错误/恢复时总览与详情的提示和数据。
+- 320px/390px 无页面横向溢出；图内文字未超出节点。Watch 仍需手动刷新页面。

@@ -92,6 +92,83 @@ def test_workspace_json_only_has_history_but_no_html_or_assets(tmp_path, canonic
     assert not list(output.rglob("*.js"))
 
 
+def test_unreadable_project_replaces_previous_detail_with_unknown_progress(tmp_path, canonical_pair):
+    root = tmp_path / "workspace"
+    root.mkdir()
+    pair = _project(root, "forge", canonical_pair)
+    run_workspace_dashboard(root)
+    output = root / ".pair/dashboard"
+    project = json.loads((output / "data.json").read_text())["projects"][0]
+    detail = output / project["artifact_dir"]
+    history = next((detail / "history").glob("*.json"))
+    previous_history = history.read_bytes()
+    (pair / "progress.yaml").write_text("steps: [unfinished\n")
+    run_workspace_dashboard(root)
+    data = json.loads((detail / "data.json").read_text())
+    assert data["progress_known"] is False
+    assert data["freshness"]["state"] == "unavailable"
+    assert data["current_step"] is None
+    assert "Source unavailable · progress unknown" in (detail / "index.html").read_text()
+    assert "33%" not in (detail / "index.html").read_text()
+    assert history.read_bytes() == previous_history
+
+
+def test_workspace_watch_keeps_failed_detail_stale_and_recovers(monkeypatch, tmp_path, canonical_pair):
+    from scripts.dashboard import watch as watch_module
+
+    root = tmp_path / "workspace"
+    root.mkdir()
+    failed = _project(root, "alpha", canonical_pair)
+    healthy = _project(root, "beta", canonical_pair)
+    original = (failed / "progress.yaml").read_text()
+    output = root / ".pair/dashboard"
+
+    def read():
+        projects = {item["name"]: item for item in json.loads((output / "data.json").read_text())["projects"]}
+        detail = output / projects["alpha"]["artifact_dir"]
+        return projects, detail, json.loads((detail / "data.json").read_text())
+
+    def break_one_project():
+        projects, _, data = read()
+        assert data["freshness"]["state"] == "fresh"
+        (failed / "progress.yaml").write_text("steps: [unfinished\n")
+        path = healthy / "progress.yaml"
+        path.write_text(path.read_text().replace("status: active", "status: review"))
+
+    def check_stale_and_repair():
+        projects, detail, data = read()
+        assert projects["alpha"]["error"]
+        assert data["freshness"]["state"] == "stale"
+        assert data["current_step"] == "parser"
+        assert data["completed_steps"] == 1
+        assert "Showing last valid state · stale" in (detail / "index.html").read_text()
+        assert data["actions"][0]["command"] == "/pair status"
+        assert projects["beta"]["snapshot"]["freshness"]["state"] == "fresh"
+        assert projects["beta"]["snapshot"]["plan"][1]["status"] == "review"
+        (failed / "progress.yaml").write_text(original.replace("status: active", "status: review"))
+
+    def check_recovery():
+        projects, detail, data = read()
+        assert projects["alpha"]["error"] is None
+        assert data["freshness"]["state"] == "fresh"
+        assert data["plan"][1]["status"] == "review"
+        assert "Showing last valid state" not in (detail / "index.html").read_text()
+        assert data["actions"][0]["command"] == "/pair review parser"
+
+    actions = iter([break_one_project, check_stale_and_repair, check_recovery])
+
+    def sleep(_interval):
+        try:
+            action = next(actions)
+        except StopIteration:
+            raise KeyboardInterrupt
+        action()
+
+    monkeypatch.setattr(watch_module.time, "sleep", sleep)
+    with pytest.raises(KeyboardInterrupt):
+        watch_dashboard(workspace=root)
+
+
 def test_workspace_missing_directory_is_reported(tmp_path):
     with pytest.raises(ValueError, match="does not exist"):
         collect_workspace(tmp_path / "missing")

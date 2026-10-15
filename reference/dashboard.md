@@ -31,6 +31,12 @@ actual completion. Read Markdown session summaries from `sessions/`; label file-
 timestamps as such. Missing state must remain visible, and unsupported schema versions
 or malformed structured state must report a generation error.
 
+Step IDs are stable strings, distinct from their position in the plan. Quote numeric-looking
+IDs consistently in YAML, including manifest IDs, progress map keys, dependencies and
+`current_step` (for example `"01"`); implicit YAML numbers are rejected instead of silently
+losing recorded progress. If legacy `progress.plan` and `progress.steps` coexist, the former
+supplies the plan while `steps` supplies actual status.
+
 ## Runtime entrypoint
 
 Normalize `$pair-programming dashboard` and `/pair-programming dashboard` to
@@ -205,6 +211,10 @@ Publish a stale warning with the error and last successful generation time; fres
 metadata may change without replacing those business values.
 Watch updates static files; reload an open HTML page to display the refreshed state.
 The mode does not start a web server or modify Pair source state.
+In workspace mode, a failed project keeps its own last valid detail snapshot marked stale,
+while healthy projects continue updating. Without an in-memory verified snapshot, overwrite
+any older detail output with an unavailable/unknown view. The overview reports the project
+read error in both cases; failure never leaves a detail page silently labeled fresh.
 
 ## P2 derived views
 
@@ -215,8 +225,14 @@ The mode does not start a web server or modify Pair source state.
   status. Derive readiness/blocked_by without adding a persisted `blocked` state. Missing
   IDs, duplicate IDs, and cycles are explicit errors. Unimplemented skipped/superseded
   dependencies do not satisfy prerequisites.
-- Step completion: completed/done steps divided by active plan steps, excluding skipped
+- Step completion: completed steps (including legacy `done`/`complete`) divided by counted plan steps, excluding skipped
   and superseded entries. Missing progress state produces an unknown percentage.
+- Step identity: show `Step 1 · ID: 01`, separating plan order from the stable ID. The current
+  step card, dependency graph and vertical list use the same order, ID and source status;
+  the graph explicitly marks the current node. Historical Timeline entries retain the step
+  recorded at that event. Plan row count includes excluded rows and labels their count.
+  Contradictory pointers, in-progress steps or a complete phase with unfinished steps show
+  reconciliation warnings and `/pair status`; rendering never rewrites progress to hide drift.
 - Implementation origin: counts/percentages of completed steps marked human, ai, mixed,
   or unknown, with explicit denominator and known-origin coverage. Takeover or Git actor
   records do not imply whole-step ownership. Mixed is never divided into assumed shares.

@@ -47,14 +47,27 @@ def _workspace_fingerprint(workspace: Path) -> dict[str, tuple[int, str]]:
     return files
 
 
-def _refresh(pair_dir: Path, output: Path, json_only: bool, workspace: Path | None = None):
+def _refresh(pair_dir: Path, output: Path, json_only: bool, workspace: Path | None = None, previous=None):
     # Parse before writing, so incomplete/invalid state preserves the last good view.
     snapshot = collect_workspace(workspace) if workspace is not None else collect_dashboard(pair_dir)
     if isinstance(snapshot, DashboardSnapshot):
         errors = [warning for warning in snapshot.warnings if warning.startswith("Cannot read ")]
         if errors:
             raise ValueError("; ".join(errors))
+    else:
+        for project in snapshot.projects:
+            errors = [warning for warning in project.snapshot.warnings if warning.startswith("Cannot read ")] if project.snapshot is not None else []
+            if errors:
+                project.error = "; ".join(errors)
+                project.snapshot = None
     snapshot = _with_freshness(snapshot, {"mode": "watch", "state": "fresh", "checked_at": datetime.now(timezone.utc).isoformat(), "error": None})
+    if isinstance(snapshot, WorkspaceSnapshot) and isinstance(previous, WorkspaceSnapshot):
+        last_valid = {project.path: project.snapshot for project in previous.projects if project.snapshot is not None}
+        for project in snapshot.projects:
+            if project.error and project.path in last_valid:
+                project.snapshot = _with_freshness(last_valid[project.path], {
+                    "mode": "watch", "state": "stale", "checked_at": snapshot.freshness["checked_at"], "error": project.error,
+                })
     export_dashboard(snapshot, output, json_only)
     return snapshot
 
@@ -109,7 +122,7 @@ def watch_dashboard(
         if not pending_refresh:
             continue
         try:
-            refreshed = _refresh(pair_dir, dashboard_dir, json_only, workspace)
+            refreshed = _refresh(pair_dir, dashboard_dir, json_only, workspace, snapshot)
         except (ValueError, OSError) as exc:
             message = f"Dashboard refresh failed: {exc}. Watching continues."
             if message != last_error:

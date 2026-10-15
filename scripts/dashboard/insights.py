@@ -6,7 +6,7 @@ from collections import Counter
 
 from .model import PlanItem
 
-COMPLETED = {"completed", "done"}
+COMPLETED = {"completed", "done", "complete"}
 TERMINAL_OPERATIONS = ("completed", "abandoned")
 
 
@@ -108,6 +108,26 @@ def validation_summary(manifest: dict, progress: dict) -> dict:
     }
 
 
+def step_consistency(plan: list[PlanItem], progress: dict) -> list[str]:
+    """Report contradictory pointers without guessing which source value to change."""
+    issues = []
+    current = progress.get("current_step")
+    ids = {step.id for step in plan}
+    in_progress = [step.id for step in plan if step.status in {"active", "review"}]
+    if current and current not in ids:
+        issues.append(f"Current step {current!r} is missing from the plan; reconcile Pair state")
+    elif current:
+        other = [name for name in in_progress if name != current]
+        if other:
+            issues.append(f"In-progress steps {', '.join(other)} differ from current step {current!r}; reconcile Pair state")
+    elif in_progress:
+        issues.append(f"No current step is recorded, but steps {', '.join(in_progress)} are in progress; reconcile Pair state")
+    incomplete = [step.id for step in plan if step.status not in COMPLETED | {"skipped", "superseded"}]
+    if progress.get("phase") == "complete" and incomplete:
+        issues.append(f"Workflow phase is complete, but steps {', '.join(incomplete)} are incomplete; reconcile Pair state")
+    return issues
+
+
 def workflow_actions(manifest: dict, progress: dict, plan: list[PlanItem], graph: dict, validation: dict, operations: list[dict]) -> list[dict[str, str]]:
     actions = []
 
@@ -139,13 +159,14 @@ def workflow_actions(manifest: dict, progress: dict, plan: list[PlanItem], graph
         add("validation", "Review recorded validation failures", "A recorded check failed; inspect its evidence before continuing.", "/pair review")
     if graph["errors"]:
         add("plan", "Resolve plan dependencies", "; ".join(graph["errors"]), "/pair rebase-plan")
+    issues = step_consistency(plan, progress)
+    if issues:
+        add("recovery", "Reconcile step progress", "; ".join(issues), "/pair status")
     if not actions and progress.get("phase") != "guided_reconstruction":
         add("phase", "Inspect workflow phase", f"Recorded phase: {progress.get('phase') or 'unknown'}. Check phase and validation evidence before starting a guided step.", "/pair status")
     if not actions:
         current = next((step for step in plan if step.id == progress.get("current_step")), None)
-        if progress.get("current_step") and current is None:
-            add("recovery", "Reconcile the current step", "The recorded current step is missing from the plan.", "/pair status")
-        elif current and current.blocked_by:
+        if current and current.blocked_by:
             add("plan", "Resolve current-step prerequisites", "Waiting on " + ", ".join(current.blocked_by), "/pair status")
         elif current and current.readiness == "in_progress":
             command = "review" if current.status == "review" else "next"

@@ -45,6 +45,9 @@ Describes the feature and the verified reference plan:
 - risks / decisions.
 
 Manifest is planned/reference truth. It does not prove Human Workspace has completed a step.
+Step IDs are stable strings, separate from their display position. Quote numeric-looking IDs
+such as `"01"` consistently in manifest steps, dependency lists, progress step keys and
+`current_step`; unquoted YAML numbers do not preserve the string identity.
 
 Schema: `schemas/manifest.schema.json`.
 
