@@ -14,6 +14,7 @@ REQUIRED_FILES = [
     "SKILL.md",
     "reference/command-protocol.md",
     "reference/decomposition.md",
+    "reference/dashboard.md",
     "reference/design-gate.md",
     "reference/guide-quality.md",
     "reference/pitfall-journal.md",
@@ -35,6 +36,7 @@ REQUIRED_FILES = [
     "schemas/progress.schema.json",
     "schemas/pitfalls.schema.json",
     "schemas/takeover-operation.schema.json",
+    "schemas/session.schema.json",
     "examples/example-session.md",
     "adapters/README.md",
     "adapters/codex.md",
@@ -46,14 +48,28 @@ REQUIRED_FILES = [
     "scripts/check-guide.py",
     "scripts/install.sh",
     "scripts/install.ps1",
+    "scripts/dashboard/__init__.py",
+    "scripts/dashboard/main.py",
+    "scripts/dashboard/model.py",
+    "scripts/dashboard/collector.py",
+    "scripts/dashboard/renderer.py",
+    "scripts/dashboard/export.py",
+    "scripts/dashboard/watch.py",
+    "scripts/dashboard/state.py",
+    "scripts/dashboard/sessions.py",
+    "scripts/dashboard/insights.py",
+    "scripts/dashboard/workspace.py",
+    "scripts/dashboard/README.md",
+    "scripts/dashboard/requirements.txt",
 ]
 
 COMMANDS = [
     "plan", "next", "review", "hint", "explain",
-    "show", "take", "challenge", "status", "rebase-plan",
+    "show", "take", "challenge", "status", "dashboard", "rebase-plan",
 ]
 
 SCHEMA_FILES = [
+    "schemas/session.schema.json",
     "schemas/config.schema.json",
     "schemas/manifest.schema.json",
     "schemas/progress.schema.json",
@@ -62,6 +78,7 @@ SCHEMA_FILES = [
 ]
 
 VERSIONED_TEMPLATES = [
+    "templates/session-summary.md",
     "templates/config.yaml",
     "templates/manifest.yaml",
     "templates/progress.yaml",
@@ -123,6 +140,7 @@ if 'opencode/slash: "true"' not in frontmatter:
 
 for required_reference in (
     "reference/command-protocol.md",
+    "reference/dashboard.md",
     "reference/design-gate.md",
     "reference/decomposition.md",
     "reference/guide-quality.md",
@@ -137,12 +155,17 @@ for required_reference in (
         fail(f"SKILL.md is missing routed workflow reference: {required_reference}")
 
 example = (ROOT / "examples/example-session.md").read_text(encoding="utf-8")
+protocol = (ROOT / "reference/command-protocol.md").read_text(encoding="utf-8")
 for command in COMMANDS:
     semantic = f"/pair {command}"
     if semantic not in text:
         fail(f"SKILL.md is missing semantic command: {semantic}")
     if semantic not in example:
         fail(f"example session is missing command coverage: {semantic}")
+    if f"| `{semantic}` |" not in text:
+        fail(f"SKILL.md is missing command dispatch route: {semantic}")
+    if f"## `{semantic}" not in protocol:
+        fail(f"command protocol is missing command contract: {semantic}")
 
 for invocation in ("$pair-programming plan", "/pair-programming plan"):
     if invocation not in text:
@@ -169,7 +192,9 @@ for rel in SCHEMA_FILES:
     if schema_version.get("const") != 1:
         fail(f"{rel} must pin schema_version to 1")
 
-for rel in ("scripts/validate-package.py", "scripts/check-guide.py"):
+for rel in ["scripts/validate-package.py", "scripts/check-guide.py"] + [
+    str(path.relative_to(ROOT)) for path in sorted((ROOT / "scripts/dashboard").glob("*.py"))
+]:
     try:
         ast.parse((ROOT / rel).read_text(encoding="utf-8"), filename=rel)
     except SyntaxError as exc:
@@ -186,7 +211,7 @@ for platform in (
     if platform not in install_ps:
         fail(f"install.ps1 is missing platform: {platform}")
 
-for runtime_component in ("schemas", "check-guide.py"):
+for runtime_component in ("schemas", "check-guide.py", "scripts/dashboard", "requirements.txt"):
     if runtime_component not in install_sh:
         fail(f"install.sh does not package runtime component: {runtime_component}")
     if runtime_component not in install_ps:

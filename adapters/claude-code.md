@@ -24,6 +24,7 @@ references remain valid.
 /pair-programming hint step 2
 /pair-programming take tests
 /pair-programming status
+/pair-programming dashboard
 ```
 
 Trailing arguments are normalized to the internal `/pair ...` semantic protocol.

@@ -27,6 +27,7 @@ $pair-programming review
 $pair-programming hint step 2
 $pair-programming take tests
 $pair-programming status
+$pair-programming dashboard
 ```
 
 These host-native calls map to the internal `/pair ...` semantic protocol.

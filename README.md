@@ -161,29 +161,57 @@ A few weeks later:
 "I no longer feel safe changing this code."
 ```
 
-Pair Programming Skill changes the workflow to:
+### Complete command workflow
 
-```text
-Requirement / Design
-        ↓
-Design Gate
-        ↓
-Shadow Implementation
-        ↓
-Build / Test / Debug
-        ↓
-Record Pitfalls & Hidden Constraints
-        ↓
-Reverse Decomposition
-        ↓
-Guided Reconstruction
-        ↓
-AI Review / Hint / Explain
-        ↓
-Selective AI Takeover when useful
-        ↓
-Code you can actually maintain
+All 11 canonical `/pair` commands are shown below. Solid arrows show workflow progression;
+dashed arrows show optional calls. Use the host-native invocation from the installation
+table above; the command semantics stay the same. Grouped help commands are alternatives;
+return to the current Human checkpoint after using one.
+
+```mermaid
+flowchart TB
+    plan["/pair plan &lt;goal-or-design&gt;<br/>Save the canonical design"]
+    gate{"Current revision approved?"}
+    waiting["Draft or revise design<br/>Stop and wait for approval"]
+    reference["Shadow: implement, test, debug; record Pitfalls<br/>Guide: derive and verify teachable commits"]
+    next["/pair next [step]<br/>Teach one ready step and its Pitfalls"]
+    human["Human coding checkpoint<br/>Implement or fix; Human stays in control"]
+    review["/pair review [scope]<br/>Check behavior, invariants and validation"]
+    passed{"Step passes acceptance?"}
+    remaining{"More steps?"}
+    complete["Feature complete<br/>Record verification and session outcome"]
+
+    plan --> gate
+    gate -->|No| waiting
+    waiting -->|Approve this revision| gate
+    gate -->|Yes| reference
+    reference --> next --> human --> review --> passed
+    passed -->|Fix needed| human
+    passed -->|Yes| remaining
+    remaining -->|Yes| next
+    remaining -->|No| complete
+
+    help["Optional help; no Human source changes<br/>/pair hint [scope] [level]: L1–4 progressive hints<br/>/pair explain &lt;scope&gt;: code, design, Pitfalls<br/>/pair show &lt;scope&gt;: Guide reference, not applied<br/>/pair challenge [scope]: 1–3 key questions"]
+    take["/pair take &lt;scope&gt;<br/>Approved revision + recovery reconciliation<br/>Checkpoint + journal BEFORE applying code<br/>Apply, validate, record outcome; return control"]
+    replan["/pair rebase-plan<br/>Preserve Human code; replan remaining work<br/>Not Git rebase; changed design needs approval"]
+    inspect["Read-only inspection at ANY phase<br/>/pair status: Git, drift, operations, Pitfalls<br/>/pair dashboard [options]: static control center<br/>--watch / --interval / --json<br/>--pair-dir or --workspace / --output"]
+
+    human -.->|As needed| help
+    help -.->|Hint level 5| take
+    human -.->|Delegate scope| take
+    take -->|Return to checkpoint| human
+    human -.->|Plan diverges| replan
+    replan -->|Refresh remaining reference| gate
+    plan -.->|Anytime| inspect
 ```
+
+A complete user-provided design can open the approval gate immediately unless the request
+is for planning/review only. A material design change always requires approval of the new
+revision. `explain design`, `status` and `dashboard` also work while approval is pending.
+Takeover stops if approval or recovery checks fail; it reconciles an interrupted operation
+before starting another. Dashboard writes generated artifacts only; Watch requires a browser
+reload. See the [command protocol](reference/command-protocol.md) for full arguments and
+recovery rules.
 
 The Shadow Workspace is the route AI has already flown once.
 
@@ -790,6 +818,36 @@ Step 4 — locking boundary
 
 ---
 
+### `/pair dashboard`
+
+Generate a static view of existing `.pair` state: session, progress, plan, timeline, and
+pitfalls. Open `.pair/dashboard/index.html` directly in a browser. The command does not
+modify implementation code, Git refs, or workflow state and works while approval is pending.
+
+```text
+$pair-programming dashboard
+/pair-programming dashboard --json
+/pair dashboard --watch
+/pair dashboard --workspace ~/workspace
+/pair dashboard --pair-dir ./project/.pair --output ./dashboard-output
+```
+
+The installed skill includes the Python generator. Python 3.10+ and PyYAML are required
+to read canonical YAML state. See [dashboard setup and usage](scripts/dashboard/README.md)
+and the [dashboard contract](reference/dashboard.md).
+
+`--watch` generates once, then polls state changes every second and reports step
+transitions. Use `--interval <seconds>` to adjust polling and Ctrl-C to stop. Reload
+the open HTML to display regenerated state; invalid intermediate input is retried
+without replacing the last valid dashboard.
+
+The control center also displays dependency/readiness information, suggested next commands,
+recorded validation and knowledge coverage, implementation origin, and rebuildable session
+history. Origin percentages use completed steps as the denominator and retain mixed/unknown.
+Step completion excludes skipped/superseded entries; unavailable progress stays unknown.
+The workspace option lists direct child projects, with individual detail pages and read-error
+isolation. It also supports `--watch`; reload the static page after regeneration.
+
 ### `/pair rebase-plan`
 
 This is **not** Git rebase.
@@ -1105,12 +1163,14 @@ pair-programming-skill/
 │
 ├── scripts/
 │   ├── check-guide.py
+│   ├── dashboard/
 │   ├── install.sh
 │   ├── install.ps1
 │   └── validate-package.py
 │
 ├── reference/
 │   ├── command-protocol.md
+│   ├── dashboard.md
 │   ├── decomposition.md
 │   ├── design-gate.md
 │   ├── guide-quality.md
@@ -1125,6 +1185,7 @@ pair-programming-skill/
 │   ├── manifest.schema.json
 │   ├── pitfalls.schema.json
 │   ├── progress.schema.json
+│   ├── session.schema.json
 │   └── takeover-operation.schema.json
 │
 └── templates/

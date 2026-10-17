@@ -11,6 +11,7 @@ Canonical state files:
 - `.pair/progress.yaml` -> `progress.schema.json`
 - `.pair/pitfalls.yaml` -> `pitfalls.schema.json`
 - `.pair/operations/*.yaml` -> `takeover-operation.schema.json`
+- `.pair/sessions/*.md` YAML frontmatter, or session `.yaml`/`.json` metadata -> `session.schema.json`
 
 New state must use `schema_version: 1`.
 
@@ -21,3 +22,7 @@ key.
 
 Schemas are intentionally stricter at the top level and extensible inside evidence/result
 objects so repositories can preserve project-specific validation details.
+
+Session IDs are stable across edits; source timestamps include timezones, and unknown
+values remain null. A session outcome does not declare feature completion. Generated
+dashboard history exports are derived records, not canonical session metadata files.

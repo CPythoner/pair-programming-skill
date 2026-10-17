@@ -158,29 +158,54 @@ Agent
 几周之后：这段代码我已经不敢动了
 ```
 
-Pair Programming Skill 把流程改成：
+### 全部命令流程图
 
-```text
-需求 / 设计
-    ↓
-Design Gate
-    ↓
-Shadow 完整实现
-    ↓
-Build / Test / Debug
-    ↓
-记录踩坑与隐藏约束
-    ↓
-反向拆解为 Guide Steps
-    ↓
-你逐步实现
-    ↓
-AI Review / Hint / Explain
-    ↓
-需要时 AI 接管局部
-    ↓
-最终得到你真正能维护的代码
+下图覆盖全部 11 条标准 `/pair` 命令。实线表示工作流推进，虚线表示按需调用。
+实际使用时采用上方安装表中的宿主调用方式，命令语义保持一致。辅助命令按需选用，
+调用后回到当前 Human 检查点，并非要求依次执行。
+
+```mermaid
+flowchart TB
+    plan["/pair plan &lt;goal-or-design&gt;<br/>保存标准设计文档"]
+    gate{"当前 revision 已批准？"}
+    waiting["起草或修改设计<br/>停止实现，等待明确批准"]
+    reference["Shadow：实现、测试、Debug，记录 Pitfalls<br/>Guide：拆解并验证教学提交链"]
+    next["/pair next [step]<br/>讲解一个可执行步骤及相关 Pitfalls"]
+    human["Human 编码检查点<br/>用户实现或修复，掌握控制权"]
+    review["/pair review [scope]<br/>检查行为、关键约束和验证证据"]
+    passed{"当前步骤验收通过？"}
+    remaining{"还有剩余步骤？"}
+    complete["Feature 完成<br/>记录验证证据和会话结果"]
+
+    plan --> gate
+    gate -->|否| waiting
+    waiting -->|批准当前 revision| gate
+    gate -->|是| reference
+    reference --> next --> human --> review --> passed
+    passed -->|需要修复| human
+    passed -->|是| remaining
+    remaining -->|是| next
+    remaining -->|否| complete
+
+    help["按需辅助，不修改 Human 源码<br/>/pair hint [scope] [level]：L1–4 渐进提示<br/>/pair explain &lt;scope&gt;：解释代码、设计、Pitfalls<br/>/pair show &lt;scope&gt;：查看 Guide，不应用代码<br/>/pair challenge [scope]：1–3 个关键问题"]
+    take["/pair take &lt;scope&gt;<br/>当前设计已批准 + 完成恢复对账<br/>修改前创建 checkpoint + operation journal<br/>应用、验证、记录结果，交还控制权"]
+    replan["/pair rebase-plan<br/>保留 Human 代码，重规划剩余工作<br/>不是 Git rebase；设计变化须重新批准"]
+    inspect["任意阶段均可只读查看<br/>/pair status：Git、漂移、operation、Pitfalls<br/>/pair dashboard [options]：静态控制中心<br/>--watch / --interval / --json<br/>--pair-dir 或 --workspace / --output"]
+
+    human -.->|按需调用| help
+    help -.->|hint 第 5 级| take
+    human -.->|委托选定范围| take
+    take -->|回到检查点| human
+    human -.->|计划产生分歧| replan
+    replan -->|更新剩余参考实现| gate
+    plan -.->|随时查看| inspect
 ```
+
+用户直接提供的完整设计可打开审批门，除非明确只要求规划或评审；设计发生实质变化后，
+必须重新批准新的 revision。等待批准时也能使用 `explain design`、`status` 和 `dashboard`。
+接管的审批或恢复检查未通过时停止修改；有中断 operation 时先对账，再开始新的接管。
+Dashboard 只写生成产物；Watch 更新后需刷新浏览器。完整参数与恢复规则见
+[命令协议](reference/command-protocol.md)。
 
 Shadow 是 AI 已经提前飞过一次的航线。
 
@@ -789,6 +814,34 @@ Step 4 — locking boundary
 
 ---
 
+### `/pair dashboard`
+
+从现有 `.pair` 状态生成静态看板，展示会话、进度、计划、时间线和 Pitfalls。
+直接用浏览器打开 `.pair/dashboard/index.html`。该命令只写入看板产物，不修改实现代码、
+Git 引用或工作流状态；等待设计批准时也可以使用。
+
+```text
+$pair-programming dashboard
+/pair-programming dashboard --json
+/pair dashboard --watch
+/pair dashboard --workspace ~/workspace
+/pair dashboard --pair-dir ./project/.pair --output ./dashboard-output
+```
+
+安装包包含 Python 生成器。读取正式 YAML 状态需要 Python 3.10+ 和 PyYAML。
+详见 [dashboard 安装与用法](scripts/dashboard/README.md) 和
+[dashboard 生成契约](reference/dashboard.md)。
+
+`--watch` 首次生成后默认每秒轮询一次状态变化，自动重新生成产物并报告步骤变化。
+用 `--interval <seconds>` 调整轮询间隔，按 Ctrl-C 停止。已打开的 HTML 刷新后显示
+新状态；读取到半写入或无效状态时保留上一份有效产物并继续重试。
+
+控制中心还展示步骤依赖与可开始状态、建议的下一条命令、记录的验证结果和知识覆盖、
+实现来源及可重建的会话历史。来源比例以已完成步骤为分母，保留 mixed/unknown；
+步骤完成比例排除 skipped/superseded，进度来源缺失时保持未知。
+Workspace 只扫描直接子项目，每个项目有详情页，读取错误单独展示；支持组合 `--watch`。
+会话时间和结果只取明确的源记录，旧 Markdown 不推测真实时间或结果。
+
 ### `/pair rebase-plan`
 
 这里的 rebase 不是 Git rebase。
@@ -1099,12 +1152,14 @@ pair-programming-skill/
 │
 ├── scripts/
 │   ├── check-guide.py
+│   ├── dashboard/
 │   ├── install.sh
 │   ├── install.ps1
 │   └── validate-package.py
 │
 ├── reference/
 │   ├── command-protocol.md
+│   ├── dashboard.md
 │   ├── decomposition.md
 │   ├── design-gate.md
 │   ├── guide-quality.md
@@ -1119,6 +1174,7 @@ pair-programming-skill/
 │   ├── manifest.schema.json
 │   ├── pitfalls.schema.json
 │   ├── progress.schema.json
+│   ├── session.schema.json
 │   └── takeover-operation.schema.json
 │
 └── templates/
